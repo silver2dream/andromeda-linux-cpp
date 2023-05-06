@@ -21,7 +21,7 @@ class CConfig {
    public:
     bool Load(const char *confName);
     const char *GetString(const char *itemname);
-    int GetInt(const char *itemname, const int def);
+    int GetIntDefault(const char *itemname, const int def);
 
    public:
     static CConfig *GetInstance() {

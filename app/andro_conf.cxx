@@ -82,7 +82,7 @@ const char *CConfig::GetString(const char *itemName) {
     return nullptr;
 }
 
-int CConfig::GetInt(const char *itemname, const int def) {
+int CConfig::GetIntDefault(const char *itemname, const int def) {
     std::vector<LPCConfItem>::iterator pos;
     for (pos = ConfigItems.begin(); pos != ConfigItems.end(); ++pos) {
         if (strcasecmp((*pos)->ItemName, itemname) == 0)
