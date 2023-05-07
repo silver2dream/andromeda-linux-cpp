@@ -6,11 +6,17 @@
 
 #include "andro_conf.h"
 #include "andro_func.h"
+#include "andro_global.h"
+#include "andro_macro.h"
 #include "andro_signal.h"
+
+static void freeResource();
 
 char **G_OS_ARGV;
 char *G_ENVMEM = nullptr;
 int G_ENVIRON_LEN = 0;
+
+pid_t andro_pid;
 
 void sig_user(int signo) {
     int status;
@@ -38,13 +44,21 @@ void sig_user(int signo) {
 }
 
 int main(int argc, char *const *argv) {
+    int exitcode = 0;
+
+    andro_pid = getpid();
+    G_OS_ARGV = (char **)argv;
+
     CConfig *config = CConfig::GetInstance();
     if (config->Load("andromeda.conf") == false) {
+        log_stderr(0, "can't load config[%s] doc", "andromeda.conf");
         printf("配置文件载入失败，退出!\n");
-        exit(1);
+        exitcode = 2;
+        goto lblexit;
     }
 
-    G_OS_ARGV = (char **)argv;
+    log_init();
+
     init();
     setproctitle(config->GetString("ProcessName"));
 
@@ -67,9 +81,22 @@ int main(int argc, char *const *argv) {
 
     while (1) {
         sleep(1);
-        printf("休息 1 秒, 進程 ID = %d\n", getpid());
     }
 
+lblexit:
+    freeResource();
     printf("進程退出\n");
-    return 0;
+    return exitcode;
+}
+
+void freeResource() {
+    if (G_ENVMEM) {
+        delete[] G_ENVMEM;
+        G_ENVMEM = nullptr;
+    }
+
+    if (andro_log.fd != STDERR_FILENO && andro_log.fd != -1) {
+        close(andro_log.fd);
+        andro_log.fd = -1;
+    }
 }

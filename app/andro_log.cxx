@@ -118,4 +118,46 @@ void log_error_core(int level, int err, const char *fmt, ...) {
     tm.tm_year += 1900;
 
     u_char strcurrtime[40] = {0};
+    slprintf(strcurrtime, (u_char *)-1,
+             "%4d/%02d/%02d %02d:%02d:%02d",
+             tm.tm_year, tm.tm_mon,
+             tm.tm_mday, tm.tm_hour,
+             tm.tm_min, tm.tm_sec);
+
+    p = andro_cpymem(errstr, strcurrtime, strlen((const char *)strcurrtime));
+    p = slprintf(p, last, " [%s] ", err_levels[level]);
+    p = slprintf(p, last, "%P: ", andro_pid);
+
+    va_start(args, fmt);
+    p = vslprintf(p, last, fmt, args);
+    va_end(args);
+
+    if (err) {
+        p = log_errno(p, last, err);
+    }
+
+    if (p >= (last - 1)) {
+        p = (last - 1) - 1;
+    }
+    *p++ = '\n';
+
+    ssize_t n;
+    while (1) {
+        if (level > andro_log.log_level) {
+            break;
+        }
+
+        n = write(andro_log.fd, errstr, p - errstr);
+        if (n == -1) {
+            if (errno == ENOSPC) {
+                // maybe no space.
+            } else {
+                if (andro_log.fd != STDERR_FILENO) {
+                    n = write(STDERR_FILENO, errstr, p - errstr);
+                }
+            }
+        }
+        break;
+    }
+    return;
 }
