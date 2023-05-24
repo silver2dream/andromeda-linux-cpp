@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include "andro_func.h"
+#include "andro_global.h"
 #include "andro_macro.h"
 
 typedef struct {
@@ -17,6 +19,7 @@ typedef struct {
 } signal_t;
 
 static void signal_handler(int signo, siginfo_t *siginfo, void *ucontext);
+static void process_get_status(void);
 
 signal_t signals[] = {
     {SIGHUP, "SIGHUP", signal_handler},
@@ -60,4 +63,81 @@ int init_signals() {
 
 static void signal_handler(int signo, siginfo_t *siginfo, void *ucontext) {
     printf("signal[%d] is coming. \n", signo);
+    signal_t *sig;
+    char *action;
+
+    for (sig = signals; sig->signo != 0; sig++) {
+        if (sig->signo == signo) {
+            break;
+        }
+    }
+
+    action = (char *)"";
+
+    if (process_type == ANDRO_PROCESS_MASTER) {
+        switch (signo) {
+            case SIGCHLD:
+                andro_reap = 1;
+                break;
+            default:
+                break;
+        }
+    } else if (process_type == ANDRO_PROCESS_WORKER) {
+        // ToDo
+    } else {
+        // ToDo
+    }
+
+    if (siginfo && siginfo->si_pid) {
+        log_error_core(ANDRO_LOG_NOTICE, 0, "signal %d (%s) received from %P%s", signo, sig->signame, siginfo->si_pid, action);
+    } else {
+        log_error_core(ANDRO_LOG_NOTICE, 0, "signal %d (%s) received %s", signo, sig->signame, action);
+    }
+
+    if (signo == SIGCHLD) {
+        process_get_status();
+    }
+
+    return;
+}
+
+static void process_get_status(void) {
+    pid_t pid;
+    int status;
+    int err;
+    int one = 0;
+
+    for (;;) {
+        pid = waitpid(-1, &status, WNOHANG);
+
+        if (pid == 0) {
+            return;
+        }
+        if (pid == -1) {
+            err = errno;
+            if (err == EINTR) {
+                continue;
+            }
+
+            if (err == ECHILD && one) {
+                return;
+            }
+
+            if (err == ECHILD) {
+                log_error_core(ANDRO_LOG_INFO, err, "waitpid() failed!");
+                return;
+            }
+
+            log_error_core(ANDRO_LOG_ALERT, err, "waitpid() failed!");
+            return;
+        }
+
+        one = 1;
+        if (WTERMSIG(status)) {
+            log_error_core(ANDRO_LOG_ALERT, 0, "pid = %P exited on signal %d!", pid, WTERMSIG(status));
+        } else {
+            log_error_core(ANDRO_LOG_NOTICE, 0, "pid = %P exited with code %d!", pid, WEXITSTATUS(status));
+        }
+    }
+    return;
 }

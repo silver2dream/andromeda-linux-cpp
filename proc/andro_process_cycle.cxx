@@ -49,19 +49,19 @@ void master_process_cycle() {
             strcat(title, G_OS_ARGV[i]);
         }
         set_proctitle(title);
+        log_error_core(ANDRO_LOG_NOTICE, 0, "this is %s, pid=%P", title, andro_pid);
     }
-
-    // loaded num of sub-process from conf.
 
     int workprocess = config->GetIntDefault(ANDRO_CONF_WORK_PROCESSES, 1);
     start_worker_processes(workprocess);
 
     sigemptyset(&set);
     for (;;) {
-        log_error_core(0, 0, "this is master process, pid=%P", andro_pid);
+        // log_error_core(0, 0, "this is master process, pid=%P", andro_pid);
+        sigsuspend(&set);
         sleep(1);
     }
-    // log_error_core(0, 0, "this is master process, pid=%P", andro_pid);
+
     return;
 }
 
@@ -95,14 +95,16 @@ static int spawn_process(int num, const char *processname) {
 }
 
 static void worker_process_cycle(int num, const char *processname) {
+    process_type = ANDRO_PROCESS_WORKER;
     worker_process_init(num);
     set_proctitle(processname);
 
+    log_error_core(ANDRO_LOG_NOTICE, 0, "good--this is %s, pid=%P！", processname, andro_pid);
     for (;;) {
-        log_error_core(0, 0, "good--this is num=%d,pid=%P!", num, andro_pid);
+        // log_error_core(0, 0, "good--this is num=%d,pid=%P!", num, andro_pid);
         sleep(1);
     }
-    // log_error_core(0, 0, "good--this is num=%d,pid=%P！", num, andro_pid);
+
     return;
 }
 

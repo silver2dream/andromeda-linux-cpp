@@ -6,6 +6,8 @@
 #define ANDRO_CONF_WORK_PROCESSES_NAME "Worker"
 #define ANDRO_CONF_WORK_PROCESSES "WorkerProcesses"
 
+#define ANDRO_DAEMON_MODE "daemon"
+
 #define ANDRO_MAX_TITLE_STR 1000
 
 #define ANDRO_MAX_ERROR_STR 2048
@@ -30,5 +32,8 @@
 #define ANDRO_LOG_DEBUG 8
 
 #define ANDRO_ERROR_LOG_PATH "logs/error.log"
+
+#define ANDRO_PROCESS_MASTER 0
+#define ANDRO_PROCESS_WORKER 1
 
 #endif

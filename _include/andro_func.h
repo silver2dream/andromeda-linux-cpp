@@ -19,5 +19,6 @@ u_char *vslprintf(u_char *buf, u_char *last, const char *fmt, va_list args);
 
 int init_signals();
 void master_process_cycle();
+int daemon();
 
 #endif
