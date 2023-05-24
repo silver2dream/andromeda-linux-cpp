@@ -1,0 +1,89 @@
+2023/05/24 17:59:58 [stderr] 10552: pid=10552,arg0=andromeda:master process ./andromeda
+
+2023/05/24 17:59:58 [stderr] 10552: pid=10552,arg0=./andromeda
+
+2023/05/24 17:59:58 [stderr] 10552: pid=10552,arg0=
+
+2023/05/24 17:59:58 [stderr] 10552: this is master process, pid=10552
+2023/05/24 17:59:58 [stderr] 10553: pid=10553,arg0=andromeda:worker process
+
+2023/05/24 17:59:58 [stderr] 10553: pid=10553,arg0=andromeda:master process ./andromeda
+
+2023/05/24 17:59:58 [stderr] 10553: pid=10553,arg0=
+
+2023/05/24 18:02:42 [stderr] 10644: pid=10644,arg0=andromeda:master process ./andromeda
+
+2023/05/24 18:02:42 [stderr] 10644: pid=10644,arg0=./andromeda
+
+2023/05/24 18:02:42 [stderr] 10644: pid=10644,arg0=
+
+2023/05/24 18:02:42 [stderr] 10644: this is master process, pid=10644
+2023/05/24 18:02:42 [stderr] 10645: spawn_process() fork() num=0, title="andromeda:worker process"!
+2023/05/24 18:02:42 [stderr] 10645: pid=10645,arg0=andromeda:worker process
+
+2023/05/24 18:02:42 [stderr] 10645: pid=10645,arg0=andromeda:master process ./andromeda
+
+2023/05/24 18:02:42 [stderr] 10645: pid=10645,arg0=
+
+2023/05/24 18:50:31 [stderr] 10930: pid=10930,arg0=andromeda:master process ./andromeda
+
+2023/05/24 18:50:31 [stderr] 10930: pid=10930,arg0=./andromeda
+
+2023/05/24 18:50:31 [stderr] 10930: pid=10930,arg0=
+
+2023/05/24 18:50:31 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:31 [stderr] 10931: pid=10931,arg0=andromeda:worker process
+
+2023/05/24 18:50:31 [stderr] 10931: pid=10931,arg0=andromeda:master process ./andromeda
+
+2023/05/24 18:50:31 [stderr] 10931: pid=10931,arg0=
+
+2023/05/24 18:50:31 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:32 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:32 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:33 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:33 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:34 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:34 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:35 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:35 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:36 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:36 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:37 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:37 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:38 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:38 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:39 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:39 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:40 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:40 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:41 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:41 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:42 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:42 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:43 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:43 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:44 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:44 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:45 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:45 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:46 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:46 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:47 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:47 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:48 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:48 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:49 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:49 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:50 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:50 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:51 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:51 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:52 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:52 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:53 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:53 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:54 [stderr] 10930: this is master process, pid=10930
+2023/05/24 18:50:54 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:55 [stderr] 10931: good--this is num=0,pid=10931!
+2023/05/24 18:50:56 [stderr] 10931: good--this is num=0,pid=10931!

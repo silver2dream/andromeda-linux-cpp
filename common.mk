@@ -3,10 +3,10 @@
 # GCC is responsible for compiling C language, while g++ is used to compile C++. 
 # The -g option is used to display debugging information.
 ifeq ($(TARGET),debug)
-	CC = g++ -g -std=c++11
+	CC = g++ -g -std=c++11 -Wall -Wextra
 	VERSION = debug
 else
-	CC = g++ -std=c++11
+	CC = g++ -std=c++11 -Wall -Wextra
 	VERSION = release
 endif
 

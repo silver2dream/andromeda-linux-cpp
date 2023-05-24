@@ -1,6 +1,13 @@
 #ifndef __ANDRO_MACRO_H__
 #define __ANDRO_MACRO_H__
 
+#define ANDRO_CONF_FILE "andromeda.conf"
+#define ANDRO_CONF_MASTER_PROCESSES_NAME "Master"
+#define ANDRO_CONF_WORK_PROCESSES_NAME "Worker"
+#define ANDRO_CONF_WORK_PROCESSES "WorkerProcesses"
+
+#define ANDRO_MAX_TITLE_STR 1000
+
 #define ANDRO_MAX_ERROR_STR 2048
 
 #define andro_cpymem(dst, src, n) (((u_char*)memcpy(dst, src, n)) + (n))

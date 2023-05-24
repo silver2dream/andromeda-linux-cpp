@@ -5,7 +5,7 @@
 
 #include "andro_global.h"
 
-void init() {
+void init_proctitle() {
     int i;
     for (i = 0; environ[i]; i++) {
         G_ENVIRON_LEN += strlen(environ[i]) + 1;
@@ -25,7 +25,7 @@ void init() {
     return;
 }
 
-void setproctitle(const char *title) {
+void set_proctitle(const char *title) {
     size_t ititlelen = strlen(title);
 
     size_t environlen = 0;
@@ -33,7 +33,7 @@ void setproctitle(const char *title) {
         environlen += strlen(G_OS_ARGV[i]) + 1;
     }
 
-    size_t esy = environlen + G_ENVIRON_LEN;
+    size_t esy = G_ENV_NEED_MEM + G_ARGV_NEED_MEM;
     if (esy <= ititlelen) {
         return;
     }

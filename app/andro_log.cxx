@@ -29,7 +29,6 @@ andro_log_t andro_log;
 
 void log_init() {
     u_char *logName = nullptr;
-    size_t nLen;
 
     auto config = CConfig::GetInstance();
     logName = (u_char *)config->GetString("Log");

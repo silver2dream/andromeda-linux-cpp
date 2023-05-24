@@ -13,8 +13,6 @@ void Rtrim(char *string) {
 }
 
 void Ltrim(char *string) {
-    size_t len = 0;
-    len = strlen(string);
     char *tmp = string;
     if ((*tmp) != ' ')
         return;
