@@ -1,19 +1,14 @@
 #ifndef __ANDRO_MACRO_H__
 #define __ANDRO_MACRO_H__
 
-#define ANDRO_CONF_FILE "andromeda.conf"
-#define ANDRO_CONF_MASTER_PROCESSES_NAME "Master"
-#define ANDRO_CONF_WORK_PROCESSES_NAME "Worker"
-#define ANDRO_CONF_WORK_PROCESSES "WorkerProcesses"
-
-#define ANDRO_DAEMON_MODE "daemon"
-
 #define ANDRO_MAX_TITLE_STR 1000
 
 #define ANDRO_MAX_ERROR_STR 2048
 
 #define andro_cpymem(dst, src, n) (((u_char*)memcpy(dst, src, n)) + (n))
 #define andro_min(val1, val2) (val1 > val2 ? (val2) : (val1))
+
+#define andro_str_combine(val1, val2) val1 #val2
 
 // The maximum 32-bit unsigned integer.
 #define ANDRO_MAX_UINT32_VALUE (uint32_t)0xffffffff
@@ -35,5 +30,7 @@
 
 #define ANDRO_PROCESS_MASTER 0
 #define ANDRO_PROCESS_WORKER 1
+
+#define ANDRO_PORT_PRIFIX "Port"
 
 #endif

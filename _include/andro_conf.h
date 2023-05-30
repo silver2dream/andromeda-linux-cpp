@@ -5,6 +5,13 @@
 
 #include "andro_global.h"
 
+#define ANDRO_CONF_FILE "andromeda.conf"
+#define ANDRO_CONF_MASTER_PROCESSES_NAME "Master"
+#define ANDRO_CONF_WORK_PROCESSES_NAME "Worker"
+#define ANDRO_CONF_WORK_PROCESSES "WorkerProcesses"
+#define ANDRO_CONF_DAEMON_MODE "daemon"
+#define ANDRO_CONF_LISTEN_PORT_COUNT "PortCount"
+
 class CConfig {
    private:
     CConfig();

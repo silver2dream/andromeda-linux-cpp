@@ -8,6 +8,7 @@
 #include "andro_func.h"
 #include "andro_global.h"
 #include "andro_macro.h"
+#include "andro_socket.h"
 
 static void free_resource();
 
@@ -24,6 +25,7 @@ pid_t andro_ppid;
 int process_type;
 
 sig_atomic_t andro_reap;
+CSocket andro_socket;
 
 int main(int argc, char *const *argv) {
     int exitcode = 0;
@@ -59,9 +61,14 @@ int main(int argc, char *const *argv) {
         goto lblexit;
     }
 
+    if (andro_socket.Init() == false) {
+        exitcode = 1;
+        goto lblexit;
+    }
+
     init_proctitle();
 
-    if (config->GetIntDefault(ANDRO_DAEMON_MODE, 0) == 1) {
+    if (config->GetIntDefault(ANDRO_CONF_DAEMON_MODE, 0) == 1) {
         int daemon_reuslt = daemon();
         if (daemon_reuslt == -1) {  // Fork failed.
             exitcode = 1;

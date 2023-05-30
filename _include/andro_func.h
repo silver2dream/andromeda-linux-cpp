@@ -17,6 +17,7 @@ u_char *log_errno(u_char *buf, u_char *last, int err);
 u_char *slprintf(u_char *buf, u_char *last, const char *fmt, ...);
 u_char *vslprintf(u_char *buf, u_char *last, const char *fmt, va_list args);
 
+// Related to signal and master process.
 int init_signals();
 void master_process_cycle();
 int daemon();
