@@ -11,6 +11,8 @@
 #define ANDRO_CONF_WORK_PROCESSES "WorkerProcesses"
 #define ANDRO_CONF_DAEMON_MODE "daemon"
 #define ANDRO_CONF_LISTEN_PORT_COUNT "PortCount"
+#define ANDRO_CONF_PORT_PRIFIX "Port"
+#define ANDRO_CONF_WORK_MAX_CONNECTIONS "WorkerConnections"
 
 class CConfig {
    private:

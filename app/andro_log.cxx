@@ -54,7 +54,7 @@ void log_stderr(int err, const char *fmt, ...) {
     memset(errstr, 0, sizeof(errstr));
     last = errstr + ANDRO_MAX_ERROR_STR;
 
-    p = andro_cpymem(errstr, "andromeda: ", 11);
+    p = Andro_Cpy_Mem(errstr, "andromeda: ", 11);
 
     va_start(args, fmt);
     p = vslprintf(p, last, fmt, args);
@@ -86,9 +86,9 @@ u_char *log_errno(u_char *buf, u_char *last, int err) {
 
     size_t extralen = leftlen + rightlen;
     if ((buf + len + extralen) < last) {
-        buf = andro_cpymem(buf, leftstr, leftlen);
-        buf = andro_cpymem(buf, errorInfo, len);
-        buf = andro_cpymem(buf, rightstr, rightlen);
+        buf = Andro_Cpy_Mem(buf, leftstr, leftlen);
+        buf = Andro_Cpy_Mem(buf, errorInfo, len);
+        buf = Andro_Cpy_Mem(buf, rightstr, rightlen);
     }
     return buf;
 }
@@ -123,7 +123,7 @@ void log_error_core(int level, int err, const char *fmt, ...) {
              tm.tm_mday, tm.tm_hour,
              tm.tm_min, tm.tm_sec);
 
-    p = andro_cpymem(errstr, strcurrtime, strlen((const char *)strcurrtime));
+    p = Andro_Cpy_Mem(errstr, strcurrtime, strlen((const char *)strcurrtime));
     p = slprintf(p, last, " [%s] ", err_levels[level]);
     p = slprintf(p, last, "%P: ", andro_pid);
 

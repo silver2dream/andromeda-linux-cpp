@@ -204,5 +204,5 @@ static u_char* sprintf_num(u_char* buf, u_char* last, uint64_t ui64, u_char zero
         len = last - buf;
     }
 
-    return andro_cpymem(buf, p, len);
+    return Andro_Cpy_Mem(buf, p, len);
 }

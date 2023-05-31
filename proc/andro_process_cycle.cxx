@@ -102,7 +102,7 @@ static void worker_process_cycle(int num, const char *processname) {
     log_error_core(ANDRO_LOG_NOTICE, 0, "good--this is %s, pid=%P！", processname, andro_pid);
     for (;;) {
         // log_error_core(0, 0, "good--this is num=%d,pid=%P!", num, andro_pid);
-        sleep(1);
+        process_events_and_timers();
     }
 
     return;
@@ -114,6 +114,8 @@ static void worker_process_init(int num) {
     if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) {
         log_error_core(ANDRO_LOG_ALERT, errno, "sigprocmask() occur faill in worker_process_init()!");
     }
+
+    G_SOCKET.EpollInit();
 
     return;
 }

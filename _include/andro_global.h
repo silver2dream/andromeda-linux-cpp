@@ -3,6 +3,8 @@
 
 #include <signal.h>
 
+#include "andro_socket.h"
+
 typedef struct {
     char ItemName[50];
     char ItemContent[500];
@@ -20,6 +22,7 @@ extern char **G_OS_ARGV;
 extern char *G_ENVMEM;
 extern int G_ENVIRON_LEN;
 extern int G_DAEMONIZED;
+extern CSocket G_SOCKET;
 
 extern pid_t andro_pid;
 extern pid_t andro_ppid;
