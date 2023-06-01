@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: intall deps
-      run: apt-get install valgrind 
+      run: sudo apt-get install valgrind 
     - name: make
       run: make
     - name: make memcheck
