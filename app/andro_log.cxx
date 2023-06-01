@@ -28,18 +28,18 @@ static u_char err_levels[][20] = {
 andro_log_t andro_log;
 
 void log_init() {
-    u_char *logName = nullptr;
+    u_char *log_name = nullptr;
 
     auto config = CConfig::GetInstance();
-    logName = (u_char *)config->GetString("Log");
-    if (logName == nullptr) {
-        logName = (u_char *)ANDRO_ERROR_LOG_PATH;
+    log_name = (u_char *)config->GetString("Log");
+    if (log_name == nullptr) {
+        log_name = (u_char *)ANDRO_ERROR_LOG_PATH;
     }
 
     andro_log.log_level = config->GetIntDefault("LogLevel", ANDRO_LOG_NOTICE);
-    andro_log.fd = open((const char *)logName, O_WRONLY | O_APPEND | O_CREAT, 0644);
+    andro_log.fd = open((const char *)log_name, O_WRONLY | O_APPEND | O_CREAT, 0644);
     if (andro_log.fd == -1) {
-        log_stderr(errno, "[alert] could not open error log file: open() \"%s\" failed", logName);
+        log_stderr(errno, "[alert] could not open error log file: open() \"%s\" failed", log_name);
         andro_log.fd = STDERR_FILENO;
     }
 

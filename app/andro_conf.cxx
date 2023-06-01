@@ -20,44 +20,44 @@ CConfig::~CConfig() {
     ConfigItems.clear();
 }
 
-bool CConfig::Load(const char *confName) {
+bool CConfig::Load(const char *conf_name) {
     FILE *fp;
-    fp = fopen(confName, "r");
+    fp = fopen(conf_name, "r");
     if (fp == nullptr)
         return false;
 
-    char lineBuf[501];
+    char line_buf[501];
 
     while (!feof(fp)) {
-        if (fgets(lineBuf, 500, fp) == nullptr) {
+        if (fgets(line_buf, 500, fp) == nullptr) {
             continue;
         }
 
-        if (lineBuf[0] == 0) {
+        if (line_buf[0] == 0) {
             continue;
         }
 
-        if (*lineBuf == ';' || *lineBuf == ' ' || *lineBuf == '#' || *lineBuf == '\t' || *lineBuf == '\n') {
+        if (*line_buf == ';' || *line_buf == ' ' || *line_buf == '#' || *line_buf == '\t' || *line_buf == '\n') {
             continue;
         }
 
     lblprocstring:
-        if (strlen(lineBuf) > 0) {
-            if (lineBuf[strlen(lineBuf) - 1] == 10 || lineBuf[strlen(lineBuf) - 1] == 13 || lineBuf[strlen(lineBuf) - 1] == 32) {
-                lineBuf[strlen(lineBuf) - 1] = 0;
+        if (strlen(line_buf) > 0) {
+            if (line_buf[strlen(line_buf) - 1] == 10 || line_buf[strlen(line_buf) - 1] == 13 || line_buf[strlen(line_buf) - 1] == 32) {
+                line_buf[strlen(line_buf) - 1] = 0;
                 goto lblprocstring;
             }
         }
-        if (lineBuf[0] == 0)
+        if (line_buf[0] == 0)
             continue;
-        if (*lineBuf == '[')
+        if (*line_buf == '[')
             continue;
 
-        char *tmp = strchr(lineBuf, '=');
+        char *tmp = strchr(line_buf, '=');
         if (tmp != nullptr) {
             LPCConfItem confitem = new CConfItem;
             memset(confitem, 0, sizeof(CConfItem));
-            strncpy(confitem->ItemName, lineBuf, (int)(tmp - lineBuf));
+            strncpy(confitem->ItemName, line_buf, (int)(tmp - line_buf));
             strcpy(confitem->ItemContent, tmp + 1);
 
             Rtrim(confitem->ItemName);
@@ -73,19 +73,19 @@ bool CConfig::Load(const char *confName) {
     return true;
 }
 
-const char *CConfig::GetString(const char *itemName) {
+const char *CConfig::GetString(const char *item_name) {
     std::vector<LPCConfItem>::iterator pos;
     for (pos = ConfigItems.begin(); pos != ConfigItems.end(); ++pos) {
-        if (strcasecmp((*pos)->ItemName, itemName) == 0)
+        if (strcasecmp((*pos)->ItemName, item_name) == 0)
             return (*pos)->ItemContent;
     }
     return nullptr;
 }
 
-int CConfig::GetIntDefault(const char *itemname, const int def) {
+int CConfig::GetIntDefault(const char *item_name, const int def) {
     std::vector<LPCConfItem>::iterator pos;
     for (pos = ConfigItems.begin(); pos != ConfigItems.end(); ++pos) {
-        if (strcasecmp((*pos)->ItemName, itemname) == 0)
+        if (strcasecmp((*pos)->ItemName, item_name) == 0)
             return atoi((*pos)->ItemContent);
     }
     return def;

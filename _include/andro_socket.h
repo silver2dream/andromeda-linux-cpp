@@ -53,7 +53,7 @@ class CSocket {
     void read_conf();
     bool open_listening_sockets();
     void close_listening_sockets();
-    bool set_nonblocking(int socketfd);
+    bool set_nonblocking(int socket_fd);
 
     void event_accept(lp_connection_t old_conn_ptr);      // Build for new connection.
     void wait_requset_handler(lp_connection_t conn_ptr);  // Process data when it comes.

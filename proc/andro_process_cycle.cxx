@@ -10,9 +10,9 @@
 #include "andro_macro.h"
 
 static void start_worker_processes(int num);
-static int spawn_process(int num, const char *processname);
+static int spawn_process(int num, const char *process_name);
 static void worker_process_init(int num);
-static void worker_process_cycle(int num, const char *processname);
+static void worker_process_cycle(int num, const char *process_name);
 
 void master_process_cycle() {
     sigset_t set;
@@ -75,17 +75,17 @@ static void start_worker_processes(int num) {
     return;
 }
 
-static int spawn_process(int num, const char *processname) {
+static int spawn_process(int num, const char *process_name) {
     pid_t pid;
     pid = fork();
     switch (pid) {
         case -1:
-            log_error_core(ANDRO_LOG_ALERT, errno, "spawn_process() fork() num=%d, title=\"%s\" fail!", num, processname);
+            log_error_core(ANDRO_LOG_ALERT, errno, "spawn_process() fork() num=%d, title=\"%s\" fail!", num, process_name);
             return -1;
         case 0:
             andro_ppid = andro_pid;
             andro_pid = getpid();
-            worker_process_cycle(num, processname);
+            worker_process_cycle(num, process_name);
             break;
         default:
             break;
@@ -94,12 +94,12 @@ static int spawn_process(int num, const char *processname) {
     return pid;
 }
 
-static void worker_process_cycle(int num, const char *processname) {
+static void worker_process_cycle(int num, const char *process_name) {
     process_type = ANDRO_PROCESS_WORKER;
     worker_process_init(num);
-    set_proctitle(processname);
+    set_proctitle(process_name);
 
-    log_error_core(ANDRO_LOG_NOTICE, 0, "good--this is %s, pid=%P！", processname, andro_pid);
+    log_error_core(ANDRO_LOG_NOTICE, 0, "good--this is %s, pid=%P！", process_name, andro_pid);
     for (;;) {
         // log_error_core(0, 0, "good--this is num=%d,pid=%P!", num, andro_pid);
         process_events_and_timers();
