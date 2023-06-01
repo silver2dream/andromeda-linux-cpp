@@ -14,7 +14,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: intall deps
-      run: yum install -y valgrind
+      run: yum install -y valgrind gcc make
     - name: make
       run: make
     - name: make memcheck
