@@ -13,3 +13,9 @@ clean:
 
 memcheck:
 	valgrind --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=$(BUILD_ROOT)/log.txt ./andromeda
+
+kill:
+	@for pid in $(shell pgrep andromeda); \
+	do \
+		kill -9 $$pid; \
+	done

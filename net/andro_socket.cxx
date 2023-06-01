@@ -16,6 +16,8 @@
 #include <time.h>      //localtime_r
 #include <unistd.h>    //STDERR_FILENO
 
+#include <string>
+
 #include "andro_conf.h"
 #include "andro_func.h"
 #include "andro_macro.h"
@@ -81,7 +83,8 @@ bool CSocket::open_listening_sockets() {
             return false;
         }
 
-        port = config->GetIntDefault(Andro_Str_Combine(ANDRO_CONF_PORT_PRIFIX, i), 10000);
+        auto port_str = ANDRO_CONF_PORT_PRIFIX + std::to_string(i);
+        port = config->GetIntDefault(port_str.c_str(), 10000);
         serv_addr.sin_port = htons(in_port_t(port));
 
         if (bind(socket_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) == -1) {

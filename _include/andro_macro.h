@@ -8,8 +8,6 @@
 #define Andro_Cpy_Mem(dst, src, n) (((u_char*)memcpy(dst, src, n)) + (n))
 #define Andro_Min(val1, val2) (val1 > val2 ? (val2) : (val1))
 
-#define Andro_Str_Combine(val1, val2) val1 #val2
-
 // The maximum 32-bit unsigned integer.
 #define ANDRO_MAX_UINT32_VALUE (uint32_t)0xffffffff
 

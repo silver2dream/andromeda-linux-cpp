@@ -70,6 +70,11 @@ void CSocket::event_accept(lp_connection_t old_conn_ptr) {
 
         memcpy(&new_conn_ptr->socket_addr, &client_sock_addr, sock_len);
 
+        u_char ip_addr[100];
+        memset(ip_addr, 0, sizeof(ip_addr));
+        sock_ntop(&new_conn_ptr->socket_addr, 1, ip_addr, sizeof(ip_addr) - 10);
+        log_stderr(0, "client ip=%s", ip_addr);
+
         if (!use_accept4) {
             if (set_nonblocking(conn_fd) == false) {
                 close_accepted_connection(new_conn_ptr);
