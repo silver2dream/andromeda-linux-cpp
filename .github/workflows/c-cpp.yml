@@ -8,14 +8,14 @@ on:
 
 jobs:
   build:
-
-    runs-on: centos7
+    runs-on: ubuntu-latest
+    container: docker.io/centos:7
 
     steps:
     - uses: actions/checkout@v3
+    - name: intall deps
+      run: yum install -y valgrind
     - name: make
       run: make
     - name: make memcheck
-      run: |
-        yum install -y valgrind
-        make memcheck
+      run: make memcheck
