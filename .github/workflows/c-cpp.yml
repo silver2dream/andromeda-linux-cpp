@@ -9,11 +9,13 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: centos7
 
     steps:
     - uses: actions/checkout@v3
     - name: make
       run: make
     - name: make memcheck
-      run: make memcheck
+      run: |
+        yum install -y valgrind
+        make memcheck
