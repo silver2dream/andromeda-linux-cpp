@@ -20,6 +20,16 @@ u_char* slprintf(u_char* buf, u_char* last, const char* fmt, ...) {
     return p;
 }
 
+u_char* snprintf(u_char* buf, size_t max, const char* fmt, ...) {
+    u_char* p;
+    va_list args;
+
+    va_start(args, fmt);
+    p = vslprintf(buf, buf + max, fmt, args);
+    va_end(args);
+    return p;
+}
+
 u_char* vslprintf(u_char* buf, u_char* last, const char* fmt, va_list args) {
     u_char zero;
 
