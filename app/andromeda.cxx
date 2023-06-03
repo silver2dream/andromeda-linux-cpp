@@ -8,6 +8,7 @@
 #include "andro_func.h"
 #include "andro_global.h"
 #include "andro_macro.h"
+#include "andro_memory.h"
 #include "andro_socket.h"
 
 static void free_resource();
@@ -50,12 +51,16 @@ int main(int argc, char *const *argv) {
 
     CConfig *config = CConfig::GetInstance();
     if (config->Load(ANDRO_CONF_FILE) == false) {
+        log_init();
         log_stderr(0, "can't load config[%s] doc", ANDRO_CONF_FILE);
         exitcode = 2;
         goto lblexit;
     }
 
+    CMemory::GetInstance();
+
     log_init();
+
     if (init_signals() != 0) {
         exitcode = 1;
         goto lblexit;

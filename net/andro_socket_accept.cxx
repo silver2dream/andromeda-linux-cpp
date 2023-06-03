@@ -77,7 +77,7 @@ void CSocket::event_accept(lp_connection_t old_conn_ptr) {
 
         if (!use_accept4) {
             if (set_nonblocking(conn_fd) == false) {
-                close_accepted_connection(new_conn_ptr);
+                close_connection(new_conn_ptr);
                 return;
             }
         }
@@ -86,20 +86,10 @@ void CSocket::event_accept(lp_connection_t old_conn_ptr) {
         new_conn_ptr->w_ready = 1;
         new_conn_ptr->rhandler = &CSocket::wait_requset_handler;
 
-        if (EpollAddEvent(conn_fd, 1, 0, EPOLLET, EPOLL_CTL_ADD, new_conn_ptr) == -1) {
-            close_accepted_connection(new_conn_ptr);
+        if (EpollAddEvent(conn_fd, 1, 0, 0, EPOLL_CTL_ADD, new_conn_ptr) == -1) {
+            close_connection(new_conn_ptr);
             return;
         }
         break;
     } while (1);
-}
-
-void CSocket::close_accepted_connection(lp_connection_t conn_ptr) {
-    int fd = conn_ptr->fd;
-    free_connection(conn_ptr);
-    conn_ptr->fd = -1;
-    if (close(fd) == -1) {
-        log_error_core(ANDRO_LOG_ALERT, errno, "close(%d) failed in CSocket::close_accepted_connection", fd);
-    }
-    return;
 }

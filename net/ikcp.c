@@ -345,7 +345,7 @@ void ikcp_release(ikcpcb *kcp)
 //---------------------------------------------------------------------
 // set output callback, which will be invoked by kcp
 //---------------------------------------------------------------------
-void ikcp_setoutput(ikcpcb *kcp, int (*output)(const char *buf, int len,
+void ikcp_setoutput(ikcpcb *kcp, int (*output)(const char *buffer, int len,
 	ikcpcb *kcp, void *user))
 {
 	kcp->output = output;
@@ -737,8 +737,8 @@ void ikcp_parse_data(ikcpcb *kcp, IKCPSEG *newseg)
 #endif
 
 #if 1
-//	printf("snd(buf=%d, queue=%d)\n", kcp->nsnd_buf, kcp->nsnd_que);
-//	printf("rcv(buf=%d, queue=%d)\n", kcp->nrcv_buf, kcp->nrcv_que);
+//	printf("snd(buffer=%d, queue=%d)\n", kcp->nsnd_buf, kcp->nsnd_que);
+//	printf("rcv(buffer=%d, queue=%d)\n", kcp->nrcv_buf, kcp->nrcv_que);
 #endif
 }
 

@@ -73,7 +73,7 @@ void log_stderr(int err, const char *fmt, ...) {
     return;
 }
 
-u_char *log_errno(u_char *buf, u_char *last, int err) {
+u_char *log_errno(u_char *buffer, u_char *last, int err) {
     char *errorInfo = strerror(err);
     size_t len = strlen(errorInfo);
 
@@ -85,12 +85,12 @@ u_char *log_errno(u_char *buf, u_char *last, int err) {
     size_t rightlen = strlen(rightstr);
 
     size_t extralen = leftlen + rightlen;
-    if ((buf + len + extralen) < last) {
-        buf = Andro_Cpy_Mem(buf, leftstr, leftlen);
-        buf = Andro_Cpy_Mem(buf, errorInfo, len);
-        buf = Andro_Cpy_Mem(buf, rightstr, rightlen);
+    if ((buffer + len + extralen) < last) {
+        buffer = Andro_Cpy_Mem(buffer, leftstr, leftlen);
+        buffer = Andro_Cpy_Mem(buffer, errorInfo, len);
+        buffer = Andro_Cpy_Mem(buffer, rightstr, rightlen);
     }
-    return buf;
+    return buffer;
 }
 
 void log_error_core(int level, int err, const char *fmt, ...) {
