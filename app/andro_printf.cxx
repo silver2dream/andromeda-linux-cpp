@@ -8,29 +8,29 @@
 #include "andro_global.h"
 #include "andro_macro.h"
 
-static u_char* sprintf_num(u_char* buf, u_char* last, uint64_t ui64, u_char zero, uintptr_t hexadecimal, uintptr_t width);
+static u_char* sprintf_num(u_char* buffer, u_char* last, uint64_t ui64, u_char zero, uintptr_t hexadecimal, uintptr_t width);
 
-u_char* slprintf(u_char* buf, u_char* last, const char* fmt, ...) {
+u_char* slprintf(u_char* buffer, u_char* last, const char* fmt, ...) {
     va_list args;
     u_char* p;
 
     va_start(args, fmt);
-    p = vslprintf(buf, last, fmt, args);
+    p = vslprintf(buffer, last, fmt, args);
     va_end(args);
     return p;
 }
 
-u_char* snprintf(u_char* buf, size_t max, const char* fmt, ...) {
+u_char* snprintf(u_char* buffer, size_t max, const char* fmt, ...) {
     u_char* p;
     va_list args;
 
     va_start(args, fmt);
-    p = vslprintf(buf, buf + max, fmt, args);
+    p = vslprintf(buffer, buffer + max, fmt, args);
     va_end(args);
     return p;
 }
 
-u_char* vslprintf(u_char* buf, u_char* last, const char* fmt, va_list args) {
+u_char* vslprintf(u_char* buffer, u_char* last, const char* fmt, va_list args) {
     u_char zero;
 
     uintptr_t width, sign, hex, frac_width, scale, n;
@@ -43,7 +43,7 @@ u_char* vslprintf(u_char* buf, u_char* last, const char* fmt, va_list args) {
     double f;       // Save the corresponding variable parameters for %f
     uint64_t frac;  // For the %f variable parameter, obtain the content after the 2 decimal places based on %.2f, etc.
 
-    while (*fmt && buf < last) {
+    while (*fmt && buffer < last) {
         if (*fmt == '%') {
             zero = (u_char)((*++fmt == '0') ? '0' : ' ');
 
@@ -95,7 +95,7 @@ u_char* vslprintf(u_char* buf, u_char* last, const char* fmt, va_list args) {
 
             switch (*fmt) {
                 case '%':
-                    *buf++ = '%';
+                    *buffer++ = '%';
                     fmt++;
                     continue;
                 case 'd':
@@ -107,8 +107,8 @@ u_char* vslprintf(u_char* buf, u_char* last, const char* fmt, va_list args) {
                     break;
                 case 's':
                     p = va_arg(args, u_char*);
-                    while (*p && buf < last) {
-                        *buf++ = *p++;
+                    while (*p && buffer < last) {
+                        *buffer++ = *p++;
                     }
                     fmt++;
                     continue;
@@ -119,7 +119,7 @@ u_char* vslprintf(u_char* buf, u_char* last, const char* fmt, va_list args) {
                 case 'f':
                     f = va_arg(args, double);
                     if (f < 0) {
-                        *buf++ = '-';
+                        *buffer++ = '-';
                         f = -f;
                     }
                     ui64 = (int64_t)f;
@@ -138,41 +138,41 @@ u_char* vslprintf(u_char* buf, u_char* last, const char* fmt, va_list args) {
                             frac = 0;
                         }
 
-                        buf = sprintf_num(buf, last, ui64, zero, 0, width);
+                        buffer = sprintf_num(buffer, last, ui64, zero, 0, width);
 
                         if (frac_width) {
-                            if (buf < last) {
-                                *buf++ = '.';
+                            if (buffer < last) {
+                                *buffer++ = '.';
                             }
-                            buf = sprintf_num(buf, last, frac, '0', 0, frac_width);
+                            buffer = sprintf_num(buffer, last, frac, '0', 0, frac_width);
                         }
                         fmt++;
                         continue;
                     }
                 default:
-                    *buf++ = *fmt++;
+                    *buffer++ = *fmt++;
                     continue;
             }
 
             if (sign) {
                 if (i64 < 0) {
-                    *buf++ = '-';
+                    *buffer++ = '-';
                     ui64 = (uint64_t)-i64;
                 } else {
                     ui64 = (uint64_t)i64;
                 }
             }
-            buf = sprintf_num(buf, last, ui64, zero, hex, width);
+            buffer = sprintf_num(buffer, last, ui64, zero, hex, width);
             fmt++;
         } else {
-            *buf++ = *fmt++;
+            *buffer++ = *fmt++;
         }
     }
 
-    return buf;
+    return buffer;
 }
 
-static u_char* sprintf_num(u_char* buf, u_char* last, uint64_t ui64, u_char zero, uintptr_t hexadecimal, uintptr_t width) {
+static u_char* sprintf_num(u_char* buffer, u_char* last, uint64_t ui64, u_char zero, uintptr_t hexadecimal, uintptr_t width) {
     u_char *p, temp[ANDRO_INT64_LEN + 1];
     size_t len;
     uint32_t ui32;
@@ -205,14 +205,14 @@ static u_char* sprintf_num(u_char* buf, u_char* last, uint64_t ui64, u_char zero
 
     len = (temp + ANDRO_INT64_LEN) - p;
 
-    while (len++ < width && buf < last) {
-        *buf++ = zero;
+    while (len++ < width && buffer < last) {
+        *buffer++ = zero;
     }
 
     len = (temp + ANDRO_INT64_LEN) - p;
-    if ((buf + len) >= last) {
-        len = last - buf;
+    if ((buffer + len) >= last) {
+        len = last - buffer;
     }
 
-    return Andro_Cpy_Mem(buf, p, len);
+    return Andro_Cpy_Mem(buffer, p, len);
 }
