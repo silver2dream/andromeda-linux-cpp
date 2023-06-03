@@ -4,6 +4,7 @@
 #include <signal.h>
 
 #include "andro_socket.h"
+#include "andro_threadpool.h"
 
 typedef struct {
     char ItemName[50];
@@ -23,6 +24,7 @@ extern char *G_ENVMEM;
 extern int G_ENVIRON_LEN;
 extern int G_DAEMONIZED;
 extern CSocket G_SOCKET;
+extern CThreadPool G_THREAD_POOL;
 
 extern pid_t andro_pid;
 extern pid_t andro_ppid;

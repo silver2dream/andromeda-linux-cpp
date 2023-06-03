@@ -13,6 +13,7 @@
 #define ANDRO_CONF_LISTEN_PORT_COUNT "PortCount"
 #define ANDRO_CONF_PORT_PRIFIX "Port"
 #define ANDRO_CONF_WORK_MAX_CONNECTIONS "WorkerConnections"
+#define ANDRO_CONF_WORK_THREAD_COUNT "WorkerThreadCount"
 
 class CConfig {
    private:

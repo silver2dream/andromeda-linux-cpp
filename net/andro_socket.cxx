@@ -2,25 +2,25 @@
 #include "andro_socket.h"
 
 #include <arpa/inet.h>
-#include <errno.h>   //errno
-#include <fcntl.h>   //open
-#include <stdarg.h>  //va_start....
-#include <stdint.h>  //uintptr_t
+#include <errno.h>    //errno
+#include <fcntl.h>    //open
+#include <pthread.h>  //
+#include <stdarg.h>   //va_start....
+#include <stdint.h>   //uintptr_t
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>  //ioctl
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/time.h>  //gettimeofday
-#include <time.h>      //localtime_r
-#include <unistd.h>    //STDERR_FILENO
+#include <sys/time.h>   //gettimeofday
+#include <time.h>       //localtime_r
+#include <unistd.h>     //STDERR_FILENO
 
 #include <string>
 
 #include "andro_conf.h"
 #include "andro_func.h"
 #include "andro_macro.h"
+#include "andro_memory.h"
 
 CSocket::CSocket() {
     worker_max_connections = 1;
@@ -29,6 +29,10 @@ CSocket::CSocket() {
     epoll_handler = -1;
     connections_ptr = nullptr;
     free_connections_ptr = nullptr;
+
+    msg_queue_size = 0;
+
+    pthread_mutex_init(&msg_queue_mutex, NULL);
     return;
 }
 
@@ -38,7 +42,27 @@ CSocket::~CSocket() {
         delete (*pos);
     }
     listen_socket_list.clear();
+
+    if (connections_ptr != nullptr) {
+        delete[] connections_ptr;
+    }
+
+    clear_msg_queue();
+
+    pthread_mutex_destroy(&msg_queue_mutex);
+
     return;
+}
+
+void CSocket::clear_msg_queue() {
+    char *mem_ptr;
+    CMemory *memory = CMemory::GetInstance();
+
+    while (!msg_queue.empty()) {
+        mem_ptr = msg_queue.front();
+        msg_queue.pop_front();
+        memory->FreeMemeory(mem_ptr);
+    }
 }
 
 bool CSocket::Init() {

@@ -1,5 +1,5 @@
-#ifndef _ANDRO_MEMORY_H
-#define _ANDRO_MEMORY_H
+#ifndef __ANDRO_MEMORY_H__
+#define __ANDRO_MEMORY_H__
 
 #include <stddef.h>
 

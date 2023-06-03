@@ -27,6 +27,7 @@ int process_type;
 
 sig_atomic_t andro_reap;
 CSocket G_SOCKET;
+CThreadPool G_THREAD_POOL;
 
 int main(int argc, char *const *argv) {
     int exitcode = 0;

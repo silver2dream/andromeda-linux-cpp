@@ -75,10 +75,13 @@ class CSocket {
    public:
     CSocket();
     virtual ~CSocket();
-
-   public:
     virtual bool Init();
 
+   public:
+    char* PopFromMsgQueue();
+    virtual void ThreadRecvProcFunc(char* msg_buffer);
+
+   public:
     int EpollInit();
     int EpollAddEvent(int fd, int read_event, int write_event, uint32_t other_flag, uint32_t event_type, lp_connection_t conn_ptr);
     int EpollProcessEvents(int timer);
@@ -96,9 +99,8 @@ class CSocket {
     ssize_t recv_proc(lp_connection_t conn_ptr, char* buffer, ssize_t buf_len);
     void proc_header_handler(lp_connection_t conn_ptr);
     void proc_data_handler(lp_connection_t conn_ptr);
-    void push_to_msg_queue(char* buffer);
-    void pop_to_msg_queue();
-    void clear_msg_recv_queue();
+    void push_to_msg_queue(char* buffer, int& msg_count);
+    void clear_msg_queue();
 
     size_t sock_ntop(struct sockaddr* sock_addr, int port, u_char* text, size_t len);
 
@@ -119,6 +121,9 @@ class CSocket {
     struct epoll_event epoll_events[ANDRO_MAX_EPOLL_WAIT_EVENTS];
 
     std::list<char*> msg_queue;
+    int msg_queue_size;
+
+    pthread_mutex_t msg_queue_mutex;
 };
 
 #endif

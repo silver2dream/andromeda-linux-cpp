@@ -105,6 +105,7 @@ static void worker_process_cycle(int num, const char *process_name) {
         process_events_and_timers();
     }
 
+    G_THREAD_POOL.StopAll();
     return;
 }
 
@@ -114,6 +115,13 @@ static void worker_process_init(int num) {
     if (sigprocmask(SIG_SETMASK, &set, NULL) == -1) {
         log_error_core(ANDRO_LOG_ALERT, errno, "sigprocmask() occur faill in worker_process_init()!");
     }
+
+    CConfig *config = CConfig::GetInstance();
+    int thread_num = config->GetIntDefault(ANDRO_CONF_WORK_THREAD_COUNT, 5);
+    if (G_THREAD_POOL.Create(thread_num) == false) {
+        exit(-2);
+    }
+    sleep(1);
 
     G_SOCKET.EpollInit();
 

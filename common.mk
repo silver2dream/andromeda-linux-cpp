@@ -3,7 +3,7 @@
 # GCC is responsible for compiling C language, while g++ is used to compile C++. 
 # The -g option is used to display debugging information.
 ifeq ($(TARGET),debug)
-	CC = g++ -g -std=c++11 -Wall -Wextra
+	CC = g++ -std=c++11 -g -Wall -Wextra
 	VERSION = debug
 else
 	CC = g++ -std=c++11 -Wall -Wextra
@@ -43,7 +43,7 @@ endif
 $(BIN):$(LINK_OBJ)
 	@echo "------------------------build $(VERSION) mode--------------------------------"
 	
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -lpthread
 
 $(LINK_OBJ_DIR)/%.o:%.cxx
 	$(CC) -I$(INCLUDE_PATH) -o $@ -c $(filter %.cxx,$^)
@@ -51,4 +51,4 @@ $(LINK_OBJ_DIR)/%.o:%.cxx
 
 $(DEP_DIR)/%.d:%.cxx
 	echo -n $(LINK_OBJ_DIR)/ > $@
-	gcc -I$(INCLUDE_PATH) -MM $^ >> $@
+	$(CC) -I$(INCLUDE_PATH) -MM $^ >> $@

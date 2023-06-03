@@ -1,6 +1,8 @@
 #ifndef __ANDRO_FUNC_H__
 #define __ANDRO_FUNC_H__
 
+#include <sys/types.h>
+
 void Rtrim(char *string);
 void Ltrim(char *string);
 

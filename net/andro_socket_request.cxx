@@ -1,17 +1,20 @@
 #include <arpa/inet.h>
-#include <errno.h>   //errno
-#include <fcntl.h>   //open
-#include <stdarg.h>  //va_start....
-#include <stdint.h>  //uintptr_t
+#include <errno.h>    //errno
+#include <fcntl.h>    //open
+#include <pthread.h>  //
+#include <stdarg.h>   //va_start....
+#include <stdint.h>   //uintptr_t
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>  //ioctl
 #include <sys/time.h>   //gettimeofday
 #include <time.h>       //localtime_r
-#include <unistd.h>
+#include <unistd.h>     //STDERR_FILENO
 
 #include "andro_func.h"
+#include "andro_global.h"
+#include "andro_lockmutex.h"
 #include "andro_macro.h"
 #include "andro_memory.h"
 #include "andro_socket.h"
@@ -136,40 +139,36 @@ void CSocket::proc_header_handler(lp_connection_t conn_ptr) {
 }
 
 void CSocket::proc_data_handler(lp_connection_t conn_ptr) {
-    push_to_msg_queue(conn_ptr->allocated_packet_mem_ptr);
+    int msg_count = 0;
+    push_to_msg_queue(conn_ptr->allocated_packet_mem_ptr, msg_count);
 
-    // Todo
-    // Dispatch business logic.
+    G_THREAD_POOL.Call(msg_count);
 
     conn_ptr->is_memory_allocated_for_packet = false;
     conn_ptr->allocated_packet_mem_ptr = nullptr;
     conn_ptr->ResetRecv();
 }
 
-void CSocket::push_to_msg_queue(char* buffer) {
+void CSocket::push_to_msg_queue(char* buffer, int& msg_count) {
+    CLock lock(&msg_queue_mutex);
     msg_queue.push_back(buffer);
-
-    pop_to_msg_queue();
-
-    // For testing.
-    log_stderr(0, "receive  full packet(header + body)");
+    ++msg_queue_size;
+    msg_count = msg_queue_size;
 }
 
-void CSocket::pop_to_msg_queue() {
+char* CSocket::PopFromMsgQueue() {
+    CLock lock(&msg_queue_mutex);
+
     if (msg_queue.empty()) {
-        return;
+        return nullptr;
     }
 
-    int size = msg_queue.size();
-    if (size < 1000) {
-        return;
-    }
+    char* msg_buffer = msg_queue.front();
+    msg_queue.pop_front();
+    --msg_queue_size;
+    return msg_buffer;
+}
 
-    CMemory* memory = CMemory::GetInstance();
-    int cha = size - 500;
-    for (int i = 0; i < cha; ++i) {
-        char* tmp = msg_queue.front();
-        msg_queue.front();
-        memory->FreeMemeory(tmp);
-    }
+void CSocket::ThreadRecvProcFunc(char* msg_buffer) {
+    return;
 }

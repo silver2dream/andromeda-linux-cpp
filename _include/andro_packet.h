@@ -1,5 +1,5 @@
-#ifndef _ANDRO_PACKET_H
-#define _ANDRO_PACKET_H
+#ifndef __ANDRO_PACKET_H__
+#define __ANDRO_PACKET_H__
 
 #define ANDRO_PKG_MAX_LEN 30000
 
