@@ -5,8 +5,10 @@
 #include <unistd.h>
 
 #include "andro_conf.h"
+#include "andro_crc32.h"
 #include "andro_func.h"
 #include "andro_global.h"
+#include "andro_logic.h"
 #include "andro_macro.h"
 #include "andro_memory.h"
 #include "andro_socket.h"
@@ -26,7 +28,7 @@ pid_t andro_ppid;
 int process_type;
 
 sig_atomic_t andro_reap;
-CSocket G_SOCKET;
+CLogic G_SOCKET;
 CThreadPool G_THREAD_POOL;
 
 int main(int argc, char *const *argv) {
@@ -59,6 +61,7 @@ int main(int argc, char *const *argv) {
     }
 
     CMemory::GetInstance();
+    CCRC32::GetInstance();
 
     log_init();
 
