@@ -9,16 +9,29 @@
 #include "andro_macro.h"
 #include "andro_memory.h"
 
-pthread_mutex_t CThreadPool::pthread_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t CThreadPool::pthread_cond = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t CThreadPool::pool_pthread_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t CThreadPool::pool_pthread_cond = PTHREAD_COND_INITIALIZER;
 bool CThreadPool::shutdown = false;
 
 CThreadPool::CThreadPool() {
     running_thread_num = 0;
     last_emg_time = 0;
+
+    msg_queue_size = 0;
 }
 
 CThreadPool::~CThreadPool() {
+    clear_msg_queue();
+}
+
+void CThreadPool::clear_msg_queue() {
+    char* tmp_mem_ptr;
+    CMemory* memory = CMemory::GetInstance();
+    while (!msg_queue.empty()) {
+        tmp_mem_ptr = msg_queue.front();
+        msg_queue.pop_front();
+        memory->FreeMemeory(tmp_mem_ptr);
+    }
 }
 
 bool CThreadPool::Create(int in_thread_num) {
@@ -27,15 +40,18 @@ bool CThreadPool::Create(int in_thread_num) {
 
     thread_num = in_thread_num;
     for (int i = 0; i < thread_num; ++i) {
-        thread = new thread_t(this);
-        thread_vector.push_back(thread);
-        err = pthread_create(&thread->handle, NULL, ThreadFunc, thread);
+        thread_vector.push_back(thread = new thread_t(this));
+        err = pthread_create(&thread->handle, NULL, thread_func, thread);
         if (err != 0) {
             log_stderr(err, "to create therad[%d] failed, err=%d", i, err);
             return false;
+        } else {
+            // log_stderr(0, "to create therad[%d] succesed,tid=%ui", i, thread->handle);
         }
     }
 
+    // We must ensure that each thread is started and runs to pthread_cond_wait() before this function returns.
+    // Only in this way can these threads perform their subsequent normal operations.
     std::vector<lp_thread_t>::iterator iter;
 lblfor:
     for (iter = thread_vector.begin(); iter != thread_vector.end(); iter++) {
@@ -47,46 +63,48 @@ lblfor:
     return true;
 }
 
-void* CThreadPool::ThreadFunc(void* threa_data) {
+void* CThreadPool::thread_func(void* threa_data) {
     lp_thread_t therad = static_cast<lp_thread_t>(threa_data);
     CThreadPool* thread_pool = therad->This;
 
-    char* job_buffer = nullptr;
     CMemory* memory = CMemory::GetInstance();
     int err;
 
     pthread_t tid = pthread_self();
     while (true) {
-        err = pthread_mutex_lock(&pthread_mutex);
+        err = pthread_mutex_lock(&pool_pthread_mutex);
         if (err != 0) {
-            log_stderr(err, "pthread_mutex_lock() failed in CThreadPool::ThreadFunc(), err=%d", err);
+            log_stderr(err, "pthread_mutex_lock() failed in CThreadPool::thread_func(), err=%d", err);
         }
 
-        while ((job_buffer = G_SOCKET.PopFromMsgQueue()) == nullptr && shutdown == false) {
+        // During the initialization phase, put the threads into sleep mode.
+        while (thread_pool->msg_queue.size() == 0 && shutdown == false) {
             if (therad->is_running == false) {
                 therad->is_running = true;
             }
 
-            pthread_cond_wait(&pthread_cond, &pthread_mutex);
+            pthread_cond_wait(&pool_pthread_cond, &pool_pthread_mutex);
         }
 
-        err = pthread_mutex_unlock(&pthread_mutex);
-        if (err != 0) {
-            log_stderr(err, "pthread_cond_wait() failed in CThreadPool::ThreadFunc(), err=%d", err);
-        }
-
+        // First, check the condition for thread exit.
         if (shutdown) {
-            if (job_buffer != nullptr) {
-                memory->FreeMemeory(job_buffer);
-            }
+            pthread_mutex_unlock(&pool_pthread_mutex);
             break;
+        }
+
+        // Processing the message now.  Please note, it's still under mutual exclusion.
+        char* job_buffer = thread_pool->msg_queue.front();
+        thread_pool->msg_queue.pop_front();
+        --thread_pool->msg_queue_size;
+
+        err = pthread_mutex_unlock(&pool_pthread_mutex);
+        if (err != 0) {
+            log_stderr(err, "pthread_cond_wait() failed in CThreadPool::thread_func(), err=%d", err);
         }
 
         ++thread_pool->running_thread_num;
 
-        log_stderr(0, "excute begin, tid=%u", tid);
-        sleep(5);
-        log_stderr(0, "excute end, tid=%u", tid);
+        G_SOCKET.ThreadRecvProcFunc(job_buffer);
 
         memory->FreeMemeory(job_buffer);
         --thread_pool->running_thread_num;
@@ -101,7 +119,7 @@ void CThreadPool::StopAll() {
     }
     shutdown = true;
 
-    int err = pthread_cond_broadcast(&pthread_cond);
+    int err = pthread_cond_broadcast(&pool_pthread_cond);
     if (err != 0) {
         log_stderr(err, "pthread_cond_broadcast() failed in CThreadPool::StopAll(), err=%d", err);
         return;
@@ -112,8 +130,8 @@ void CThreadPool::StopAll() {
         pthread_join((*iter)->handle, NULL);  // Waiting for a thread end.
     }
 
-    pthread_mutex_destroy(&pthread_mutex);
-    pthread_cond_destroy(&pthread_cond);
+    pthread_mutex_destroy(&pool_pthread_mutex);
+    pthread_cond_destroy(&pool_pthread_cond);
 
     for (iter = thread_vector.begin(); iter != thread_vector.end(); iter++) {
         if (*iter) {
@@ -126,8 +144,26 @@ void CThreadPool::StopAll() {
     return;
 }
 
-void CThreadPool::Call(int msg_count) {
-    int err = pthread_cond_signal(&pthread_cond);
+void CThreadPool::PushToMsgQueueAndAwake(char* buffer) {
+    int err = pthread_mutex_lock(&pool_pthread_mutex);
+    if (err != 0) {
+        log_stderr(err, "pthread_mutex_lock() failed in CThreadPool::PushToMsgQueueAndAwake(),err=%d", err);
+    }
+
+    msg_queue.push_back(buffer);
+    ++msg_queue_size;
+
+    err = pthread_mutex_unlock(&pool_pthread_mutex);
+    if (err != 0) {
+        log_stderr(err, "pthread_mutex_unlock() failed in CThreadPool::PushToMsgQueueAndAwake(),err=%d", err);
+    }
+
+    Call();
+    return;
+}
+
+void CThreadPool::Call() {
+    int err = pthread_cond_signal(&pool_pthread_cond);
     if (err != 0) {
         log_stderr(err, "pthread_cond_signal() failed in CThreadPool::Call(), err=%d", err);
     }

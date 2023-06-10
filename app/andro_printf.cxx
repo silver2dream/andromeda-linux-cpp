@@ -105,6 +105,13 @@ u_char* vslprintf(u_char* buffer, u_char* last, const char* fmt, va_list args) {
                         ui64 = (uint64_t)va_arg(args, u_int);
                     }
                     break;
+                case 'i':
+                    if (sign) {
+                        i64 = (int64_t)va_arg(args, intptr_t);
+                    } else {
+                        ui64 = (uint64_t)va_arg(args, uintptr_t);
+                    }
+                    break;
                 case 's':
                     p = va_arg(args, u_char*);
                     while (*p && buffer < last) {

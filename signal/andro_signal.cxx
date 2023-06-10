@@ -54,7 +54,7 @@ int init_signals() {
             log_error_core(ANDRO_LOG_EMERG, errno, "sigaction(%s) failed", sig->signame);
             return -1;
         } else {
-            log_stderr(0, "sigaction(%s) succed!", sig->signame);
+            // log_stderr(0, "sigaction(%s) succed!", sig->signame);
         }
     }
 

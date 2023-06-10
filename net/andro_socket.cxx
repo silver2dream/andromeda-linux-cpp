@@ -30,9 +30,6 @@ CSocket::CSocket() {
     connections_ptr = nullptr;
     free_connections_ptr = nullptr;
 
-    msg_queue_size = 0;
-
-    pthread_mutex_init(&msg_queue_mutex, NULL);
     return;
 }
 
@@ -47,22 +44,7 @@ CSocket::~CSocket() {
         delete[] connections_ptr;
     }
 
-    clear_msg_queue();
-
-    pthread_mutex_destroy(&msg_queue_mutex);
-
     return;
-}
-
-void CSocket::clear_msg_queue() {
-    char *mem_ptr;
-    CMemory *memory = CMemory::GetInstance();
-
-    while (!msg_queue.empty()) {
-        mem_ptr = msg_queue.front();
-        msg_queue.pop_front();
-        memory->FreeMemeory(mem_ptr);
-    }
 }
 
 bool CSocket::Init() {

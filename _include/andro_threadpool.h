@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include <atomic>
+#include <list>
 #include <vector>
 
 class CThreadPool {
@@ -14,10 +15,12 @@ class CThreadPool {
    public:
     bool Create(int in_thread_num);
     void StopAll();
-    void Call(int msg_count);
+    void PushToMsgQueueAndAwake(char* buffer);
+    void Call();
 
    private:
-    static void* ThreadFunc(void* thread_data);
+    static void* thread_func(void* thread_data);
+    void clear_msg_queue();
 
    private:
     typedef struct andro_thread_s {
@@ -32,8 +35,8 @@ class CThreadPool {
     } thread_t, *lp_thread_t;
 
    private:
-    static pthread_mutex_t pthread_mutex;
-    static pthread_cond_t pthread_cond;
+    static pthread_mutex_t pool_pthread_mutex;
+    static pthread_cond_t pool_pthread_cond;
     static bool shutdown;
 
     int thread_num;
@@ -42,5 +45,8 @@ class CThreadPool {
     time_t last_emg_time;
 
     std::vector<lp_thread_t> thread_vector;
+
+    std::list<char*> msg_queue;
+    int msg_queue_size;
 };
 #endif

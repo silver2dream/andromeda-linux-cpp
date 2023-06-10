@@ -4,7 +4,6 @@
 #include <sys/epoll.h>
 #include <sys/socket.h>
 
-#include <list>
 #include <vector>
 
 #include "andro_packet.h"
@@ -78,7 +77,6 @@ class CSocket {
     virtual bool Init();
 
    public:
-    char* PopFromMsgQueue();
     virtual void ThreadRecvProcFunc(char* msg_buffer);
 
    public:
@@ -99,8 +97,6 @@ class CSocket {
     ssize_t recv_proc(lp_connection_t conn_ptr, char* buffer, ssize_t buf_len);
     void proc_header_handler(lp_connection_t conn_ptr);
     void proc_data_handler(lp_connection_t conn_ptr);
-    void push_to_msg_queue(char* buffer, int& msg_count);
-    void clear_msg_queue();
 
     size_t sock_ntop(struct sockaddr* sock_addr, int port, u_char* text, size_t len);
 
@@ -119,11 +115,6 @@ class CSocket {
     int free_connection_num;  // The number for free connection in connection pool.
     std::vector<lp_listening_t> listen_socket_list;
     struct epoll_event epoll_events[ANDRO_MAX_EPOLL_WAIT_EVENTS];
-
-    std::list<char*> msg_queue;
-    int msg_queue_size;
-
-    pthread_mutex_t msg_queue_mutex;
 };
 
 #endif

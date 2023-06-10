@@ -139,34 +139,11 @@ void CSocket::proc_header_handler(lp_connection_t conn_ptr) {
 }
 
 void CSocket::proc_data_handler(lp_connection_t conn_ptr) {
-    int msg_count = 0;
-    push_to_msg_queue(conn_ptr->allocated_packet_mem_ptr, msg_count);
-
-    G_THREAD_POOL.Call(msg_count);
+    G_THREAD_POOL.PushToMsgQueueAndAwake(conn_ptr->allocated_packet_mem_ptr);
 
     conn_ptr->is_memory_allocated_for_packet = false;
     conn_ptr->allocated_packet_mem_ptr = nullptr;
     conn_ptr->ResetRecv();
-}
-
-void CSocket::push_to_msg_queue(char* buffer, int& msg_count) {
-    CLock lock(&msg_queue_mutex);
-    msg_queue.push_back(buffer);
-    ++msg_queue_size;
-    msg_count = msg_queue_size;
-}
-
-char* CSocket::PopFromMsgQueue() {
-    CLock lock(&msg_queue_mutex);
-
-    if (msg_queue.empty()) {
-        return nullptr;
-    }
-
-    char* msg_buffer = msg_queue.front();
-    msg_queue.pop_front();
-    --msg_queue_size;
-    return msg_buffer;
 }
 
 void CSocket::ThreadRecvProcFunc(char* msg_buffer) {

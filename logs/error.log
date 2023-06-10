@@ -1,4 +1,0 @@
-2023/05/24 21:36:30 [notice] 13894: this is andromeda:master process ./andromeda, pid=13894
-2023/05/24 21:36:30 [notice] 13895: good--this is andromeda:worker process, pid=13895！
-2023/05/24 21:37:13 [notice] 13894: signal 17 (SIGCHLD) received from 13895
-2023/05/24 21:37:13 [alert] 13894: pid = 13895 exited on signal 9!
