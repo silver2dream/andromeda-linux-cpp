@@ -106,6 +106,7 @@ static void worker_process_cycle(int num, const char *process_name) {
     }
 
     G_THREAD_POOL.StopAll();
+    G_SOCKET.ShutdownSubProc();
     return;
 }
 
@@ -122,6 +123,10 @@ static void worker_process_init(int num) {
         exit(-2);
     }
     sleep(1);
+
+    if (G_SOCKET.InitSubProc() == false) {
+        exit(2);
+    }
 
     G_SOCKET.EpollInit();
 

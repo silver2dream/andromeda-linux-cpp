@@ -26,6 +26,7 @@ extern int G_ENVIRON_LEN;
 extern int G_DAEMONIZED;
 extern CLogic G_SOCKET;
 extern CThreadPool G_THREAD_POOL;
+extern int G_STOP_EVENT;
 
 extern pid_t andro_pid;
 extern pid_t andro_ppid;

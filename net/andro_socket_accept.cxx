@@ -83,10 +83,11 @@ void CSocket::event_accept(lp_connection_t old_conn_ptr) {
         }
 
         new_conn_ptr->listening = old_conn_ptr->listening;
-        new_conn_ptr->w_ready = 1;
-        new_conn_ptr->rhandler = &CSocket::wait_requset_handler;
+        // new_conn_ptr->w_ready = 1;
+        new_conn_ptr->rhandler = &CSocket::read_request_handler;
+        new_conn_ptr->whandler = &CSocket::write_request_handler;
 
-        if (EpollAddEvent(conn_fd, 1, 0, 0, EPOLL_CTL_ADD, new_conn_ptr) == -1) {
+        if (EpollOperateEvent(conn_fd, EPOLL_CTL_ADD, EPOLLIN | EPOLLRDHUP, 0, new_conn_ptr) == -1) {
             close_connection(new_conn_ptr);
             return;
         }

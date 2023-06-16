@@ -19,7 +19,7 @@
 #include "andro_memory.h"
 #include "andro_socket.h"
 
-void CSocket::wait_requset_handler(lp_connection_t conn_ptr) {
+void CSocket::read_request_handler(lp_connection_t conn_ptr) {
     ssize_t result = recv_proc(conn_ptr, conn_ptr->packet_recv_buf_ptr, conn_ptr->packet_recv_len);
     if (result <= 0) {
         return;
@@ -62,7 +62,10 @@ ssize_t CSocket::recv_proc(lp_connection_t conn_ptr, char* buffer, ssize_t buf_l
     n = recv(conn_ptr->fd, buffer, buf_len, 0);
     if (n == 0) {
         log_stderr(errno, "the connection is closed through a proper four-way handshake, fd=%d", conn_ptr->fd);
-        close_connection(conn_ptr);
+        if (close(conn_ptr->fd) == -1) {
+            log_error_core(ANDRO_LOG_ALERT, errno, "close(%d) failed in CSocket::recv_proc()", conn_ptr->fd);
+        }
+        push_to_recy_connect_queue(conn_ptr);
         return -1;
     }
 
@@ -95,7 +98,10 @@ ssize_t CSocket::recv_proc(lp_connection_t conn_ptr, char* buffer, ssize_t buf_l
         }
 
         log_stderr(errno, " the connection is closed by the client in an abnormal manner, fd=%d", conn_ptr->fd);
-        close_connection(conn_ptr);
+        if (close(conn_ptr->fd) == -1) {
+            log_error_core(ANDRO_LOG_ALERT, errno, "close(%d) failed in CSocket::recv_proc()", conn_ptr->fd);
+        }
+        push_to_recy_connect_queue(conn_ptr);
         return -1;
     }
 
@@ -117,8 +123,7 @@ void CSocket::proc_header_handler(lp_connection_t conn_ptr) {
         conn_ptr->ResetRecv();
     } else {
         char* tmp_buff_ptr = (char*)memory->AllocMemory(ANDRO_MSG_HEADER_LEN + pkg_len, false);
-        conn_ptr->is_memory_allocated_for_packet = true;
-        conn_ptr->allocated_packet_mem_ptr = tmp_buff_ptr;
+        conn_ptr->allocated_packet_recv_mem_ptr = tmp_buff_ptr;
 
         lp_message_header_t msg_header_ptr = (lp_message_header_t)tmp_buff_ptr;
         msg_header_ptr->conn_ptr = conn_ptr;
@@ -139,11 +144,67 @@ void CSocket::proc_header_handler(lp_connection_t conn_ptr) {
 }
 
 void CSocket::proc_data_handler(lp_connection_t conn_ptr) {
-    G_THREAD_POOL.PushToMsgQueueAndAwake(conn_ptr->allocated_packet_mem_ptr);
+    G_THREAD_POOL.PushToMsgQueueAndAwake(conn_ptr->allocated_packet_recv_mem_ptr);
 
-    conn_ptr->is_memory_allocated_for_packet = false;
-    conn_ptr->allocated_packet_mem_ptr = nullptr;
+    conn_ptr->allocated_packet_recv_mem_ptr = nullptr;
     conn_ptr->ResetRecv();
+    return;
+}
+
+ssize_t CSocket::send_proc(lp_connection_t conn_ptr, char* buffer, ssize_t size) {
+    ssize_t n;
+
+    for (;;) {
+        n = send(conn_ptr->fd, buffer, size, 0);
+        if (n > 0) {
+            return n;
+        }
+
+        if (n == 0) {
+            return 0;
+        }
+
+        if (errno == EAGAIN) {
+            // Core buffer was full.
+            return -1;
+        }
+
+        if (errno == EINTR) {
+            log_stderr(errno, "send() failed in send_proc()");
+        } else {
+            return -2;
+        }
+    }
+}
+
+void CSocket::write_request_handler(lp_connection_t conn_ptr) {
+    CMemory* memory = CMemory::GetInstance();
+
+    ssize_t send_size = send_proc(conn_ptr, conn_ptr->packet_send_buf_ptr, conn_ptr->packet_send_len);
+
+    if (send_size > 0 && send_size != conn_ptr->packet_send_len) {
+        conn_ptr->packet_send_buf_ptr = conn_ptr->packet_send_buf_ptr + send_size;
+        conn_ptr->packet_send_len = conn_ptr->packet_send_len - send_size;
+        return;
+    } else if (send_size == -1) {
+        log_stderr(errno, "send_size == -1 in CSocket::write_request_handler");
+        return;
+    }
+
+    if (send_size > 0 && send_size == conn_ptr->packet_send_len) {
+        if (EpollOperateEvent(conn_ptr->fd, EPOLL_CTL_MOD, EPOLLOUT, 1, conn_ptr) == -1) {
+            log_stderr(errno, "EpollOperateEvent() failed in CSocket::write_request_handler");
+        }
+    }
+
+    if (sem_post(&sem_event_send_queue) == -1) {
+        log_stderr(0, "sem_post(&sem_event_send_queue) failed in CSocket::write_request_handler");
+    }
+
+    memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+    conn_ptr->allocated_packet_send_mem_ptr = nullptr;
+    --conn_ptr->throw_send_count;
+    return;
 }
 
 void CSocket::ThreadRecvProcFunc(char* msg_buffer) {

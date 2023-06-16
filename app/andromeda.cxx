@@ -27,12 +27,15 @@ pid_t andro_pid;
 pid_t andro_ppid;
 int process_type;
 
+int G_STOP_EVENT;
 sig_atomic_t andro_reap;
 CLogic G_SOCKET;
 CThreadPool G_THREAD_POOL;
 
 int main(int argc, char *const *argv) {
     int exitcode = 0;
+
+    G_STOP_EVENT = 0;
 
     andro_pid = getpid();
     andro_ppid = getppid();

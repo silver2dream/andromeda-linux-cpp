@@ -19,30 +19,20 @@
 
 #include "andro_conf.h"
 #include "andro_func.h"
+#include "andro_global.h"
+#include "andro_lockmutex.h"
 #include "andro_macro.h"
 #include "andro_memory.h"
 
 CSocket::CSocket() {
     worker_max_connections = 1;
     listen_port_count = 1;
+    recy_connection_wait_time = 60;
 
     epoll_handler = -1;
-    connections_ptr = nullptr;
-    free_connections_ptr = nullptr;
 
-    return;
-}
-
-CSocket::~CSocket() {
-    std::vector<lp_listening_t>::iterator pos;
-    for (pos = listen_socket_list.begin(); pos != listen_socket_list.end(); ++pos) {
-        delete (*pos);
-    }
-    listen_socket_list.clear();
-
-    if (connections_ptr != nullptr) {
-        delete[] connections_ptr;
-    }
+    msg_send_queue_size = 0;
+    total_recy_connection_size = 0;
 
     return;
 }
@@ -53,10 +43,91 @@ bool CSocket::Init() {
     return result;
 }
 
+bool CSocket::InitSubProc() {
+    if (pthread_mutex_init(&send_msg_queue_mutex, NULL) != 0) {
+        log_stderr(0, "pthread_mutex_init(&send_msg_queue_mutex) failed in CSocket::InitSubProc");
+        return false;
+    }
+
+    if (pthread_mutex_init(&connection_mutex, NULL) != 0) {
+        log_stderr(0, "pthread_mutex_init(&connection_mutex) failed in CSocket::InitSubProc");
+        return false;
+    }
+
+    if (pthread_mutex_init(&recy_conn_queue_mutex, NULL) != 0) {
+        log_stderr(0, "pthread_mutex_init(&recy_conn_queue_mutex) failed in CSocket::InitSubProc");
+        return false;
+    }
+
+    if (sem_init(&sem_event_send_queue, 0, 0) == -1) {
+        log_stderr(0, "sem_init(&sem_event_send_queue, 0, 0) failed in CSocket::InitSubProc");
+        return false;
+    }
+
+    int err;
+    lp_thread_t send_queue_ptr;
+    thread_container.push_back(send_queue_ptr = new thread_t(this));
+    err = pthread_create(&send_queue_ptr->handle, NULL, ServerSendQueueThread, send_queue_ptr);
+    if (err != 0) {
+        return false;
+    }
+
+    lp_thread_t recy_conn_ptr;
+    thread_container.push_back(recy_conn_ptr = new thread_t(this));
+    err = pthread_create(&recy_conn_ptr->handle, NULL, ServerRecyConnectionThread, recy_conn_ptr);
+    if (err != 0) {
+        return false;
+    }
+    return true;
+}
+
+CSocket::~CSocket() {
+    std::vector<lp_listening_t>::iterator pos;
+    for (pos = listen_socket_list.begin(); pos != listen_socket_list.end(); ++pos) {
+        delete (*pos);
+    }
+    listen_socket_list.clear();
+
+    return;
+}
+
+void CSocket::ShutdownSubProc() {
+    std::vector<lp_thread_t>::iterator iter;
+    for (iter = thread_container.begin(); iter != thread_container.end(); iter++) {
+        pthread_join((*iter)->handle, NULL);
+    }
+
+    for (iter = thread_container.begin(); iter != thread_container.end(); iter++) {
+        if (*iter)
+            delete *iter;
+    }
+    thread_container.clear();
+
+    clear_msg_send_queue();
+    clear_connetion_pool();
+
+    pthread_mutex_destroy(&connection_mutex);
+    pthread_mutex_destroy(&send_msg_queue_mutex);
+    pthread_mutex_destroy(&recy_conn_queue_mutex);
+    sem_destroy(&sem_event_send_queue);
+}
+
+void CSocket::clear_msg_send_queue() {
+    char *tmp_ptr;
+    CMemory *memory = CMemory::GetInstance();
+
+    while (!msg_send_queue.empty()) {
+        tmp_ptr = msg_send_queue.front();
+        msg_send_queue.pop_front();
+        memory->FreeMemeory(tmp_ptr);
+    }
+}
+
 void CSocket::read_conf() {
     CConfig *config = CConfig::GetInstance();
     worker_max_connections = config->GetIntDefault(ANDRO_CONF_WORK_MAX_CONNECTIONS, worker_max_connections);
     listen_port_count = config->GetIntDefault(ANDRO_CONF_LISTEN_PORT_COUNT, listen_port_count);
+    recy_connection_wait_time = config->GetIntDefault(ANDRO_CONF_RECY_WAIT_TIME, recy_connection_wait_time);
     return;
 }
 
@@ -136,6 +207,17 @@ void CSocket::close_listening_sockets() {
     return;
 }
 
+void CSocket::msg_send(char *send_buffer) {
+    CLock lock(&send_msg_queue_mutex);
+    msg_send_queue.push_back(send_buffer);
+    ++msg_send_queue_size;
+
+    if (sem_post(&sem_event_send_queue) == -1) {
+        log_stderr(0, "sem_post(&sem_event_send_queue) failed in CSocket::msg_send");
+    }
+    return;
+}
+
 int CSocket::EpollInit() {
     epoll_handler = epoll_create(worker_max_connections);
     if (epoll_handler == -1) {
@@ -143,28 +225,11 @@ int CSocket::EpollInit() {
         exit(2);
     }
 
-    connection_num = worker_max_connections;
-    connections_ptr = new connection_t[connection_num];
-
-    int i = connection_num;
-    lp_connection_t next = nullptr;
-    lp_connection_t conn = connections_ptr;
-    do {
-        i--;
-
-        conn[i].next_conn = next;
-        conn[i].fd = -1;
-        conn[i].instance = 1;
-        conn[i].sequence = 0;
-        next = &conn[i];
-    } while (i);
-
-    free_connections_ptr = next;
-    free_connection_num = connection_num;
+    init_connetion_pool();
 
     std::vector<lp_listening_t>::iterator pos;
     for (pos = listen_socket_list.begin(); pos != listen_socket_list.end(); ++pos) {
-        conn = get_connection((*pos)->fd);
+        lp_connection_t conn = get_connection((*pos)->fd);
         if (conn == nullptr) {
             log_stderr(errno, "get_free_connection() failed in EpollInit()");
             exit(2);
@@ -175,7 +240,7 @@ int CSocket::EpollInit() {
 
         conn->rhandler = &CSocket::event_accept;
 
-        if (EpollAddEvent((*pos)->fd, 1, 0, 0, EPOLL_CTL_ADD, conn) == -1) {
+        if (EpollOperateEvent((*pos)->fd, EPOLL_CTL_ADD, EPOLLIN | EPOLLRDHUP, 0, conn) == -1) {
             exit(2);
         }
     }
@@ -183,22 +248,23 @@ int CSocket::EpollInit() {
     return 1;
 }
 
-int CSocket::EpollAddEvent(int fd, int read_event, int write_event, uint32_t other_flag, uint32_t event_type, lp_connection_t conn_ptr) {
+int CSocket::EpollOperateEvent(int fd, uint32_t event_type, uint32_t other_flag, int bcation, lp_connection_t conn_ptr) {
     struct epoll_event ev;
     memset(&ev, 0, sizeof(ev));
 
-    if (read_event == 1) {
-        ev.events = EPOLLIN | EPOLLRDHUP;
+    if (event_type == EPOLL_CTL_ADD) {
+        ev.data.ptr = (void *)conn_ptr;
+        ev.events = other_flag;
+        conn_ptr->events = other_flag;
+    } else if (event_type == EPOLL_CTL_MOD) {
+        // Do nothing.
+    } else {
+        // Do nothing.
+        return 1;
     }
-
-    if (other_flag != 0) {
-        ev.events |= other_flag;
-    }
-
-    ev.data.ptr = (void *)((uintptr_t)conn_ptr | conn_ptr->instance);
 
     if (epoll_ctl(epoll_handler, event_type, fd, &ev) == -1) {
-        log_stderr(errno, "epoll_ctl(%d,%d,%d,%u,%u) failed in EpollAddEvent()", fd, read_event, write_event, other_flag, event_type);
+        log_stderr(errno, "epoll_ctl(%d,%ud,%ud,%d) failed in EpollOperateEvent()", fd, event_type, other_flag, bcation);
         return -1;
     }
     return 1;
@@ -229,23 +295,8 @@ int CSocket::EpollProcessEvents(int timer) {
     uint32_t revents;
     for (int i = 0; i < events; ++i) {
         conn = (lp_connection_t)(epoll_events[i].data.ptr);
-        instance = (uintptr_t)conn & 1;
-        conn = (lp_connection_t)((uintptr_t)conn & (uintptr_t)~1);
-
-        if (conn->fd == -1) {
-            log_error_core(ANDRO_LOG_DEBUG, 0, "the connection[%p]'s fd = -1 that is expired event in EpollProcessEvents()", conn);
-            continue;
-        }
-
-        if (conn->instance != instance) {
-            log_error_core(ANDRO_LOG_DEBUG, 0, "the connection[%p]'s instance has changed that is expired event in EpollProcessEvents()", conn);
-            continue;
-        }
-
         revents = epoll_events[i].events;
-        if (revents & (EPOLLERR | EPOLLHUP)) {
-            revents |= EPOLLIN | EPOLLOUT;
-        }
+
         if (revents & EPOLLIN) {
             (this->*(conn->rhandler))(conn);
         }
@@ -255,4 +306,115 @@ int CSocket::EpollProcessEvents(int timer) {
         }
     }
     return 1;
+}
+
+void *CSocket::ServerSendQueueThread(void *thread_data) {
+    lp_thread_t thread = static_cast<lp_thread_t>(thread_data);
+    CSocket *socket_ptr = thread->This;
+    int err;
+    std::list<char *>::iterator pos, pos2, posend;
+
+    char *msg_buffer;
+    lp_message_header_t msg_header_ptr;
+    lp_packet_header_t pkg_header_ptr;
+    lp_connection_t conn_ptr;
+    unsigned short tmp;
+    ssize_t send_size;
+
+    CMemory *memory = CMemory::GetInstance();
+
+    while (G_STOP_EVENT == 0) {
+        if (sem_wait(&socket_ptr->sem_event_send_queue) == -1) {
+            if (errno != EINTR) {
+                log_stderr(errno, "sem_wait(&socket_ptr->sem_event_send_queue failed in CSocket::ServerSendQueueThread");
+            }
+        }
+
+        if (G_STOP_EVENT != 0) {
+            break;
+        }
+
+        if (socket_ptr->msg_send_queue_size > 0) {
+            err = pthread_mutex_lock(&socket_ptr->send_msg_queue_mutex);
+            if (err != 0) {
+                log_stderr(err, "pthread_mutex_lock(&socket_ptr->send_msg_queue_mutex) failed in CSocket::ServerSendQueueThread, err=%d", err);
+            }
+
+            pos = socket_ptr->msg_send_queue.begin();
+            posend = socket_ptr->msg_send_queue.end();
+
+            while (pos != posend) {
+                msg_buffer = (*pos);
+                msg_header_ptr = (lp_message_header_t)msg_buffer;
+                pkg_header_ptr = (lp_packet_header_t)(msg_buffer + ANDRO_MSG_HEADER_LEN);
+                conn_ptr = msg_header_ptr->conn_ptr;
+
+                if (conn_ptr->sequence != msg_header_ptr->sequence) {
+                    pos2 = pos;
+                    pos++;
+                    socket_ptr->msg_send_queue.erase(pos2);
+                    --socket_ptr->msg_send_queue_size;
+                    memory->FreeMemeory(msg_buffer);
+                    continue;
+                }
+
+                if (conn_ptr->throw_send_count > 0) {
+                    pos++;
+                    continue;
+                }
+
+                conn_ptr->allocated_packet_send_mem_ptr = msg_buffer;
+                pos2 = pos;
+                pos++;
+                socket_ptr->msg_send_queue.erase(pos2);
+                --socket_ptr->msg_send_queue_size;
+                conn_ptr->packet_send_buf_ptr = (char *)pkg_header_ptr;
+                tmp = ntohs(pkg_header_ptr->pkg_len);
+                conn_ptr->packet_send_len = tmp;
+
+                log_stderr(errno, "about to send data %ud", conn_ptr->packet_send_len);
+
+                send_size = socket_ptr->send_proc(conn_ptr, conn_ptr->packet_send_buf_ptr, conn_ptr->packet_send_len);
+                if (send_size > 0) {
+                    if (send_size == conn_ptr->packet_send_len) {
+                        memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+                        conn_ptr->allocated_packet_send_mem_ptr = nullptr;
+                        conn_ptr->throw_send_count = 0;
+                        log_stderr(0, "sended data finish in CSocket::ServerSendQueueThread");
+                    } else {
+                        conn_ptr->packet_send_buf_ptr = conn_ptr->packet_send_buf_ptr + send_size;
+                        conn_ptr->packet_send_len = conn_ptr->packet_send_len - send_size;
+                        ++conn_ptr->throw_send_count;
+                        if (socket_ptr->EpollOperateEvent(conn_ptr->fd, EPOLL_CTL_MOD, EPOLLOUT, 0, conn_ptr) == -1) {
+                            log_stderr(errno, "EpollOperateEvent() failed in CSocket::ServerSendQueueThread");
+                        }
+                        log_stderr(errno, "send's buffer was full, part[%d] of total[%d]", send_size, conn_ptr->packet_send_len);
+                    }
+                    continue;
+                } else if (send_size == 0) {
+                    memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+                    conn_ptr->allocated_packet_send_mem_ptr = nullptr;
+                    conn_ptr->throw_send_count = 0;
+                    continue;
+                } else if (send_size == -1) {
+                    ++conn_ptr->throw_send_count;
+                    if (socket_ptr->EpollOperateEvent(conn_ptr->fd, EPOLL_CTL_MOD, EPOLLOUT, 0, conn_ptr) == -1) {
+                        log_stderr(errno, "EpollOperateEvent() failed in CSocket::ServerSendQueueThread");
+                    }
+                    continue;
+                } else {
+                    memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+                    conn_ptr->allocated_packet_send_mem_ptr = nullptr;
+                    conn_ptr->throw_send_count = 0;
+                }
+            }
+
+            err = pthread_mutex_unlock(&socket_ptr->send_msg_queue_mutex);
+            if (err != 0) {
+                log_stderr(err, "pthread_mutex_unlock(&socket_ptr->send_msg_queue_mutex) failed in failed in CSocket::ServerSendQueueThread, err=%d", err);
+            }
+        }
+    }
+
+    return (void *)0;
 }

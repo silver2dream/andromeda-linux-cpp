@@ -14,6 +14,7 @@
 #define ANDRO_CONF_PORT_PRIFIX "Port"
 #define ANDRO_CONF_WORK_MAX_CONNECTIONS "WorkerConnections"
 #define ANDRO_CONF_WORK_THREAD_COUNT "WorkerThreadCount"
+#define ANDRO_CONF_RECY_WAIT_TIME "RecyWaitTime"
 
 class CConfig {
    private:

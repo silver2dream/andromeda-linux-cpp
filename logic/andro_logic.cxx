@@ -13,11 +13,12 @@
 #include <sys/ioctl.h>  //ioctl
 #include <sys/time.h>   //gettimeofday
 #include <time.h>       //localtime_r
-#include <unistd.h>     //STDERR_FILENO等
+#include <unistd.h>     //STDERR_FILENO
 
 #include "andro_crc32.h"
 #include "andro_func.h"
 #include "andro_global.h"
+#include "andro_lockmutex.h"
 #include "andro_macro.h"
 #include "andro_memory.h"
 #include "andro_tmp_proto.h"
@@ -72,7 +73,7 @@ void CLogic::ThreadRecvProcFunc(char* msg_bffer) {
     unsigned short msg_code = ntohs(pkg_header_ptr->msg_code);
     lp_connection_t conn_ptr = msg_header_ptr->conn_ptr;
 
-    // The connection in this pool has been occupied by other TCP connections [other sockets],
+    // The connection in this pool has been occupied by other TCP connection_pool [other sockets],
     // which indicates that the original connection between the client and this server has been disconnected.
     // In such case, this packet should be directly discarded without processing.
     if (conn_ptr->sequence != msg_header_ptr->sequence) {
@@ -94,8 +95,36 @@ void CLogic::ThreadRecvProcFunc(char* msg_bffer) {
 }
 
 bool CLogic::HandleRegister(lp_connection_t conn_ptr, lp_message_header_t msg_header, char* pkg_body, unsigned short pkg_body_len) {
-    LPSTRUCT_REGISTER reg = (LPSTRUCT_REGISTER)pkg_body;
-    log_stderr(0, "CLogic::HandleRegister,username=%s,pwd=%s", reg->username, reg->password);
+    if (pkg_body == nullptr) {
+        return false;
+    }
+
+    int recv_len = sizeof(STRUCT_REGISTER);
+    if (recv_len != pkg_body_len) {
+        return false;
+    }
+
+    CLock lock(&conn_ptr->logic_proc_mutex);
+
+    LPSTRUCT_REGISTER recv_info = (LPSTRUCT_REGISTER)pkg_body;
+
+    lp_packet_header_t pkg_header_ptr;
+    CMemory* memory = CMemory::GetInstance();
+    CCRC32* crc32 = CCRC32::GetInstance();
+    int send_len = sizeof(STRUCT_REGISTER);
+    // send_len = 65000;
+    char* send_buffer = (char*)memory->AllocMemory(ANDRO_MSG_HEADER_LEN + ANDRO_PKG_HEADER_LEN + send_len, false);
+    memcpy(send_buffer, msg_header, ANDRO_MSG_HEADER_LEN);
+    pkg_header_ptr = (lp_packet_header_t)(send_buffer + ANDRO_MSG_HEADER_LEN);
+    pkg_header_ptr->msg_code = CMD_REGISTER;
+    pkg_header_ptr->msg_code = htons(pkg_header_ptr->msg_code);
+    pkg_header_ptr->pkg_len = htons(ANDRO_PKG_HEADER_LEN + send_len);
+
+    LPSTRUCT_REGISTER send_info = (LPSTRUCT_REGISTER)(send_buffer + ANDRO_MSG_HEADER_LEN + ANDRO_PKG_HEADER_LEN);
+    pkg_header_ptr->crc32 = crc32->GetCRC((unsigned char*)send_info, send_len);
+    pkg_header_ptr->crc32 = htonl(pkg_header_ptr->crc32);
+
+    msg_send(send_buffer);
     return true;
 }
 

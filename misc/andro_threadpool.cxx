@@ -6,6 +6,7 @@
 
 #include "andro_func.h"
 #include "andro_global.h"
+#include "andro_logic.h"
 #include "andro_macro.h"
 #include "andro_memory.h"
 
