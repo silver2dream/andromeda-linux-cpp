@@ -15,13 +15,14 @@
 #include <time.h>       //localtime_r
 #include <unistd.h>     //STDERR_FILENO
 
+#include "andro_cmd.h"
 #include "andro_crc32.h"
 #include "andro_func.h"
 #include "andro_global.h"
 #include "andro_lockmutex.h"
 #include "andro_macro.h"
 #include "andro_memory.h"
-#include "andro_tmp_proto.h"
+#include "auth.pb.h"
 
 typedef bool (CLogic::*handler)(lp_connection_t conn_ptr, lp_message_header_t msg_header, char* pkg_body, unsigned short pkg_body_len);
 
@@ -99,28 +100,34 @@ bool CLogic::HandleRegister(lp_connection_t conn_ptr, lp_message_header_t msg_he
         return false;
     }
 
-    int recv_len = sizeof(STRUCT_REGISTER);
-    if (recv_len != pkg_body_len) {
-        return false;
-    }
+    auth::C2SRegister req;
 
     CLock lock(&conn_ptr->logic_proc_mutex);
 
-    LPSTRUCT_REGISTER recv_info = (LPSTRUCT_REGISTER)pkg_body;
+    req.ParseFromArray(pkg_body, pkg_body_len);
+    log_stderr(0, "usesrname:%s", req.username().c_str());
+    log_stderr(0, "password:%s", req.password().c_str());
 
-    lp_packet_header_t pkg_header_ptr;
     CMemory* memory = CMemory::GetInstance();
     CCRC32* crc32 = CCRC32::GetInstance();
-    int send_len = sizeof(STRUCT_REGISTER);
-    // send_len = 65000;
+
+    auth::S2CRegister resp;
+    resp.set_username(req.username());
+    resp.set_password(req.password());
+    size_t send_len = resp.ByteSizeLong();
+
     char* send_buffer = (char*)memory->AllocMemory(ANDRO_MSG_HEADER_LEN + ANDRO_PKG_HEADER_LEN + send_len, false);
     memcpy(send_buffer, msg_header, ANDRO_MSG_HEADER_LEN);
+    lp_packet_header_t pkg_header_ptr;
     pkg_header_ptr = (lp_packet_header_t)(send_buffer + ANDRO_MSG_HEADER_LEN);
-    pkg_header_ptr->msg_code = CMD_REGISTER;
+    pkg_header_ptr->msg_code = ANDRO_BUSINESS_CMD_REGISTER;
     pkg_header_ptr->msg_code = htons(pkg_header_ptr->msg_code);
     pkg_header_ptr->pkg_len = htons(ANDRO_PKG_HEADER_LEN + send_len);
 
-    LPSTRUCT_REGISTER send_info = (LPSTRUCT_REGISTER)(send_buffer + ANDRO_MSG_HEADER_LEN + ANDRO_PKG_HEADER_LEN);
+    char* send_info = (send_buffer + ANDRO_MSG_HEADER_LEN + ANDRO_PKG_HEADER_LEN);
+
+    resp.SerializeToArray(send_info, send_len);
+
     pkg_header_ptr->crc32 = crc32->GetCRC((unsigned char*)send_info, send_len);
     pkg_header_ptr->crc32 = htonl(pkg_header_ptr->crc32);
 
@@ -129,7 +136,5 @@ bool CLogic::HandleRegister(lp_connection_t conn_ptr, lp_message_header_t msg_he
 }
 
 bool CLogic::HandleLogin(lp_connection_t conn_ptr, lp_message_header_t msg_header, char* pkg_body, unsigned short pkg_body_len) {
-    LPSTRUCT_LOGIN login = (LPSTRUCT_LOGIN)pkg_body;
-    log_stderr(0, "CLogic::HandleLogin,username=%s,pwd=%s", login->username, login->password);
     return true;
 }

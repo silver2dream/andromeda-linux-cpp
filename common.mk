@@ -11,11 +11,18 @@ else
 endif
 
 # The wildcard is a feature in computing that allows users to use special characters to represent one or more characters in a file name, path, or search pattern.
-SRCS = $(wildcard *.cxx)
+SRCS_CXX = $(wildcard *.cxx)
+SRCS_CC = $(wildcard *.cc)
 
-OBJS = $(SRCS:.cxx=.o)
+OBJS_CXX = $(SRCS_CXX:.cxx=.o)
+OBJS_CC = $(SRCS_CC:.cc=.o)
 
-DEPS = $(SRCS:.cxx=.d)
+OBJS = $(OBJS_CXX) $(OBJS_CC)
+
+DEPS_CXX = $(SRCS_CXX:.cxx=.d)
+DEPS_CC = $(SRCS_CC:.cc=.d)
+
+DEPS = $(DEPS_CXX) $(DEPS_CC)
 
 # In the context of a Makefile,
 # using ":=" ensures that the variable is assigned immediately during Makefile processing,
@@ -43,12 +50,18 @@ endif
 $(BIN):$(LINK_OBJ)
 	@echo "------------------------build $(VERSION) mode--------------------------------"
 	
-	$(CC) -o $@ $^ -lpthread
+	$(CC) -o $@ $^ -L/usr/local/lib -lpthread -lprotobuf -lstdc++
 
 $(LINK_OBJ_DIR)/%.o:%.cxx
-	$(CC) -I$(INCLUDE_PATH) -o $@ -c $(filter %.cxx,$^)
+	$(CC) -I$(INCLUDE_PATH) -I$(INCLUDE_PROTO) -I/usr/local/include -o $@ -c $(filter %.cxx,$^)
 
+$(LINK_OBJ_DIR)/%.o:%.cc
+	$(CC) -I$(INCLUDE_PATH) -I$(INCLUDE_PROTO) -I/usr/local/include -o $@ -c $(filter %.cc,$^)
 
 $(DEP_DIR)/%.d:%.cxx
 	echo -n $(LINK_OBJ_DIR)/ > $@
-	$(CC) -I$(INCLUDE_PATH) -MM $^ >> $@
+	$(CC) -I$(INCLUDE_PATH) -I$(INCLUDE_PROTO) -MM $^ >> $@
+
+$(DEP_DIR)/%.d:%.cc
+	echo -n $(LINK_OBJ_DIR)/ > $@
+	$(CC) -I$(INCLUDE_PATH) -I$(INCLUDE_PROTO) -MM $^ >> $@

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package auth;
+
+message C2SRegister {
+   string username = 1;
+   string password = 2;
+}
+
+message S2CRegister {
+    string username = 1;
+    string password = 2;   
+}
+

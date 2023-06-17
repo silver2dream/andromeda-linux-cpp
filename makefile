@@ -20,3 +20,8 @@ kill:
 	do \
 		kill -9 $$pid; \
 	done
+
+protoc:
+	protoc -I=/projects/andromeda/proto --cpp_out=./generated /projects/andromeda/proto/*.proto
+
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
