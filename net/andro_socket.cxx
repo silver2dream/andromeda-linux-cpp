@@ -119,7 +119,7 @@ void CSocket::clear_msg_send_queue() {
     while (!msg_send_queue.empty()) {
         tmp_ptr = msg_send_queue.front();
         msg_send_queue.pop_front();
-        memory->FreeMemeory(tmp_ptr);
+        memory->FreeMemory(tmp_ptr);
     }
 }
 
@@ -354,7 +354,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
                     pos++;
                     socket_ptr->msg_send_queue.erase(pos2);
                     --socket_ptr->msg_send_queue_size;
-                    memory->FreeMemeory(msg_buffer);
+                    memory->FreeMemory(msg_buffer);
                     continue;
                 }
 
@@ -377,7 +377,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
                 send_size = socket_ptr->send_proc(conn_ptr, conn_ptr->packet_send_buf_ptr, conn_ptr->packet_send_len);
                 if (send_size > 0) {
                     if (send_size == conn_ptr->packet_send_len) {
-                        memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+                        memory->FreeMemory(conn_ptr->allocated_packet_send_mem_ptr);
                         conn_ptr->allocated_packet_send_mem_ptr = nullptr;
                         conn_ptr->throw_send_count = 0;
                         log_stderr(0, "sended data finish in CSocket::ServerSendQueueThread");
@@ -392,7 +392,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
                     }
                     continue;
                 } else if (send_size == 0) {
-                    memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+                    memory->FreeMemory(conn_ptr->allocated_packet_send_mem_ptr);
                     conn_ptr->allocated_packet_send_mem_ptr = nullptr;
                     conn_ptr->throw_send_count = 0;
                     continue;
@@ -403,7 +403,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
                     }
                     continue;
                 } else {
-                    memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+                    memory->FreeMemory(conn_ptr->allocated_packet_send_mem_ptr);
                     conn_ptr->allocated_packet_send_mem_ptr = nullptr;
                     conn_ptr->throw_send_count = 0;
                 }

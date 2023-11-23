@@ -8,15 +8,15 @@
 class CLogic : public CSocket {
    public:
     CLogic();
-    virtual ~CLogic();
-    virtual bool Init();
+    ~CLogic() override;
+    bool Init() override;
 
    public:
     bool HandleRegister(lp_connection_t conn_ptr, lp_message_header_t msg_header, char *pkg_body, unsigned short pkg_body_len);
     bool HandleLogin(lp_connection_t conn_ptr, lp_message_header_t msg_header, char *pkg_body, unsigned short pkg_body_len);
 
    public:
-    virtual void ThreadRecvProcFunc(char *msg_buffer);
+    void ThreadRecvProcFunc(char *msg_buffer) override;
 };
 
 #endif

@@ -31,7 +31,7 @@ void CThreadPool::clear_msg_queue() {
     while (!msg_queue.empty()) {
         tmp_mem_ptr = msg_queue.front();
         msg_queue.pop_front();
-        memory->FreeMemeory(tmp_mem_ptr);
+        memory->FreeMemory(tmp_mem_ptr);
     }
 }
 
@@ -107,7 +107,7 @@ void* CThreadPool::thread_func(void* threa_data) {
 
         G_SOCKET.ThreadRecvProcFunc(job_buffer);
 
-        memory->FreeMemeory(job_buffer);
+        memory->FreeMemory(job_buffer);
         --thread_pool->running_thread_num;
     }
 

@@ -5,7 +5,7 @@
 
 class CLock {
    public:
-    CLock(pthread_mutex_t *in_mutex) {
+    explicit CLock(pthread_mutex_t *in_mutex) {
         mutex = in_mutex;
         pthread_mutex_lock(mutex);
     }

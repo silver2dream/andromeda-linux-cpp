@@ -32,7 +32,7 @@ class CConfig {
    public:
     bool Load(const char *conf_name);
     const char *GetString(const char *item_name);
-    int GetIntDefault(const char *item_name, const int def);
+    int GetIntDefault(const char *item_name, int def);
 
    public:
     static CConfig *GetInstance() {

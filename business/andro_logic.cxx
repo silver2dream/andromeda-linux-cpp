@@ -1,26 +1,12 @@
-
 #include "andro_logic.h"
 
 #include <arpa/inet.h>
-#include <errno.h>  //errno
-#include <fcntl.h>  //open
-#include <pthread.h>
-#include <stdarg.h>  //va_start....
-#include <stdint.h>  //uintptr_t
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/ioctl.h>  //ioctl
-#include <sys/time.h>   //gettimeofday
-#include <time.h>       //localtime_r
-#include <unistd.h>     //STDERR_FILENO
+#include <cstring>
 
 #include "andro_cmd.h"
 #include "andro_crc32.h"
 #include "andro_func.h"
-#include "andro_global.h"
 #include "andro_lockmutex.h"
-#include "andro_macro.h"
 #include "andro_memory.h"
 #include "auth.pb.h"
 
@@ -38,11 +24,9 @@ static const handler status_handler[] = {
 };
 #define ANDRO_AUTH_TOTAL_COMMANDS sizeof(status_handler) / sizeof(handler)
 
-CLogic::CLogic() {
-}
+CLogic::CLogic() = default;
 
-CLogic::~CLogic() {
-}
+CLogic::~CLogic() = default;
 
 bool CLogic::Init() {
     bool base = CSocket::Init();
@@ -108,7 +92,6 @@ bool CLogic::HandleRegister(lp_connection_t conn_ptr, lp_message_header_t msg_he
     log_stderr(0, "usesrname:%s", req.username().c_str());
     log_stderr(0, "password:%s", req.password().c_str());
 
-    CMemory* memory = CMemory::GetInstance();
     CCRC32* crc32 = CCRC32::GetInstance();
 
     auth::S2CRegister resp;
@@ -116,7 +99,7 @@ bool CLogic::HandleRegister(lp_connection_t conn_ptr, lp_message_header_t msg_he
     resp.set_password(req.password());
     size_t send_len = resp.ByteSizeLong();
 
-    char* send_buffer = (char*)memory->AllocMemory(ANDRO_MSG_HEADER_LEN + ANDRO_PKG_HEADER_LEN + send_len, false);
+    char* send_buffer = (char*)CMemory::AllocMemory(ANDRO_MSG_HEADER_LEN + ANDRO_PKG_HEADER_LEN + send_len, false);
     memcpy(send_buffer, msg_header, ANDRO_MSG_HEADER_LEN);
     lp_packet_header_t pkg_header_ptr;
     pkg_header_ptr = (lp_packet_header_t)(send_buffer + ANDRO_MSG_HEADER_LEN);

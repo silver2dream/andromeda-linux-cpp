@@ -201,7 +201,7 @@ void CSocket::write_request_handler(lp_connection_t conn_ptr) {
         log_stderr(0, "sem_post(&sem_event_send_queue) failed in CSocket::write_request_handler");
     }
 
-    memory->FreeMemeory(conn_ptr->allocated_packet_send_mem_ptr);
+    memory->FreeMemory(conn_ptr->allocated_packet_send_mem_ptr);
     conn_ptr->allocated_packet_send_mem_ptr = nullptr;
     --conn_ptr->throw_send_count;
     return;

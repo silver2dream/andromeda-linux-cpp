@@ -1,6 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 
 #include "andro_global.h"

@@ -1,7 +1,7 @@
 #ifndef __ADNROD_GBLDEF_H__
 #define __ADNROD_GBLDEF_H__
 
-#include <signal.h>
+#include <csignal>
 
 #include "andro_logic.h"
 #include "andro_socket.h"

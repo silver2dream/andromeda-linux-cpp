@@ -140,13 +140,13 @@ class CSocket {
 
    private:
     typedef struct andro_thread_s {
-        pthread_t handle;
+        pthread_t handle{};
         CSocket* This;
         bool is_running;
 
-        andro_thread_s(CSocket* sock) : This(sock), is_running(false) {}
+        explicit andro_thread_s(CSocket* sock) : This(sock), is_running(false) {}
 
-        ~andro_thread_s() {}
+        ~andro_thread_s() = default;
 
     } thread_t, *lp_thread_t;
 

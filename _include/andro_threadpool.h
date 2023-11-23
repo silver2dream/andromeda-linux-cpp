@@ -24,13 +24,13 @@ class CThreadPool {
 
    private:
     typedef struct andro_thread_s {
-        pthread_t handle;
+        pthread_t handle{};
         CThreadPool* This;
         bool is_running;
 
-        andro_thread_s(CThreadPool* pool) : This(pool), is_running(false) {}
+        explicit andro_thread_s(CThreadPool* pool) : This(pool), is_running(false) {}
 
-        ~andro_thread_s() {}
+        ~andro_thread_s() = default;
 
     } thread_t, *lp_thread_t;
 

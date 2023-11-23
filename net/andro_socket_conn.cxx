@@ -42,12 +42,12 @@ void andro_connection_s::GetOneToUse() {
 void andro_connection_s::PutOneToFree() {
     ++sequence;
     if (allocated_packet_recv_mem_ptr != nullptr) {
-        CMemory::GetInstance()->FreeMemeory(allocated_packet_recv_mem_ptr);
+        CMemory::GetInstance()->FreeMemory(allocated_packet_recv_mem_ptr);
         allocated_packet_recv_mem_ptr = nullptr;
     }
 
     if (allocated_packet_send_mem_ptr != nullptr) {
-        CMemory::GetInstance()->FreeMemeory(allocated_packet_send_mem_ptr);
+        CMemory::GetInstance()->FreeMemory(allocated_packet_send_mem_ptr);
         allocated_packet_send_mem_ptr = nullptr;
     }
 
@@ -79,7 +79,7 @@ void CSocket::clear_connetion_pool() {
         conn_ptr = connection_pool.front();
         connection_pool.pop_front();
         conn_ptr->~andro_connection_s();
-        memory->FreeMemeory(conn_ptr);
+        memory->FreeMemory(conn_ptr);
     }
 }
 

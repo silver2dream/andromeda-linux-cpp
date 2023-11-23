@@ -1,12 +1,10 @@
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstring>
 #include <sys/time.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
 
 #include "andro_conf.h"
@@ -43,7 +41,6 @@ void log_init() {
         andro_log.fd = STDERR_FILENO;
     }
 
-    return;
 }
 
 void log_stderr(int err, const char *fmt, ...) {
@@ -70,7 +67,6 @@ void log_stderr(int err, const char *fmt, ...) {
     *p++ = '\n';
 
     write(STDERR_FILENO, errstr, p - errstr);
-    return;
 }
 
 u_char *log_errno(u_char *buffer, u_char *last, int err) {
@@ -100,8 +96,8 @@ void log_error_core(int level, int err, const char *fmt, ...) {
     memset(errstr, 0, sizeof(errstr));
     last = errstr + ANDRO_MAX_ERROR_STR;
 
-    struct timeval tv;
-    struct tm tm;
+    struct timeval tv{};
+    struct tm tm{};
     time_t sec;
     u_char *p;
     va_list args;
@@ -141,7 +137,7 @@ void log_error_core(int level, int err, const char *fmt, ...) {
     *p++ = '\n';
 
     ssize_t n;
-    while (1) {
+    while (true) {
         if (level > andro_log.log_level) {
             break;
         }
@@ -158,5 +154,5 @@ void log_error_core(int level, int err, const char *fmt, ...) {
         }
         break;
     }
-    return;
+
 }

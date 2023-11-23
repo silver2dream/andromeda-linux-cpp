@@ -1,7 +1,7 @@
 #ifndef __ANDRO_CRC32_H__
 #define __ANDRO_CRC32_H__
 
-#include <stddef.h>  //NULL
+#include <cstddef>  //NULL
 
 class CCRC32 {
    private:
