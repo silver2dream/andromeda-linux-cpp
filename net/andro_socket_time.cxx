@@ -57,14 +57,14 @@ void *CSocket::ServerTimerQueueMonitorThread(void *thread_data) {
 }
 
 void CSocket::push_to_timer_queue(lp_connection_t conn_ptr) {
-  time_t fut_time = time(nullptr);
-  fut_time += timeout_wait_time;
+  time_t future_time = time(nullptr);
+  future_time += timeout_wait_time;
 
   CLock lock(&timer_queue_mutex);
   auto msg_header_ptr = (lp_message_header_t) CMemory::AllocMemory(ANDRO_MSG_HEADER_LEN, false);
   msg_header_ptr->conn_ptr = conn_ptr;
   msg_header_ptr->sequence = conn_ptr->sequence;
-  timer_queue_map.insert(std::make_pair(fut_time, msg_header_ptr));
+  timer_queue_map.insert(std::make_pair(future_time, msg_header_ptr));
   timer_queue_map_size++;
   timer_value = get_earliest_time();
 }
@@ -142,6 +142,18 @@ lblMTQM:
   }
 }
 
+void CSocket::clear_timer_queue() {
+  std::multimap<time_t, lp_message_header_t>::iterator pos, pos_end;
+  pos = timer_queue_map.begin();
+  pos_end = timer_queue_map.end();
+  for (; pos != pos_end; ++pos) {
+	CMemory::FreeMemory(pos->second);
+	--timer_queue_map_size;
+  }
+  timer_queue_map.clear();
+}
+
 void CSocket::HeartBeatTimeoutChecking(lp_message_header_t message_header_ptr, time_t cur_time) {
   CMemory::FreeMemory(message_header_ptr);
 }
+

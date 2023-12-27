@@ -15,7 +15,7 @@
 #define ANDRO_CONF_WORK_MAX_CONNECTIONS "WorkerConnections"
 #define ANDRO_CONF_WORK_THREAD_COUNT "WorkerThreadCount"
 #define ANDRO_CONF_SOCK_RECY_WAIT_TIME "SocketRecyWaitTime"
-#define ANDRO_CONF_SOCK_WAIT_TIME_ENABLE "SocketWaitTimeEnable"
+#define ANDRO_CONF_SOCK_KICK_TIMER_ENABLE "SocketKickTimerEnable"
 #define ANDRO_CONF_SOCK_TIMEOUT_KICK_ENABLE "SocketTimeoutKick"
 #define ANDRO_CONF_SOCK_TIMEOUT_KICK_DEFAULT_VALUE (20 * 3 + 10)
 #define ANDRO_CONF_SOCK_MAX_WAIT_TIME "SocketMaxWaitTime"

@@ -156,6 +156,10 @@ lblRRTD:
 		  continue;
 		}
 
+		if(conn_ptr->throw_send_count>0){
+		  log_stderr(0, "throw_send_count of connection[%d] was not zero that should not be happening, in CSocket::ServerRecyConnectionThread()", conn_ptr->fd);
+		}
+
 		--socket_ptr->total_recy_connection_size;
 		socket_ptr->recy_connection_pool.erase(pos);
 

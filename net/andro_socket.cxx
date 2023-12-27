@@ -33,7 +33,7 @@ CSocket::CSocket() {
   timer_queue_map_size = 0;
   timer_value = 0;
 
-  online_user_count =0;
+  online_user_count = 0;
 }
 
 bool CSocket::Init() {
@@ -78,7 +78,8 @@ bool CSocket::InitSubProc() {
   thread_container.push_back(send_queue_ptr = new thread_t(this));
   err = pthread_create(&send_queue_ptr->handle, nullptr, ServerSendQueueThread, send_queue_ptr);
   if (err != 0) {
-	log_stderr(0, "pthread_create(&send_queue_ptr->handle, nullptr, ServerSendQueueThread, send_queue_ptr) failed in CSocket::InitSubProc");
+	log_stderr(0,
+			   "pthread_create(&send_queue_ptr->handle, nullptr, ServerSendQueueThread, send_queue_ptr) failed in CSocket::InitSubProc");
 	return false;
   }
 
@@ -86,16 +87,18 @@ bool CSocket::InitSubProc() {
   thread_container.push_back(recy_conn_ptr = new thread_t(this));
   err = pthread_create(&recy_conn_ptr->handle, nullptr, ServerRecyConnectionThread, recy_conn_ptr);
   if (err != 0) {
-	log_stderr(0, "pthread_create(&recy_conn_ptr->handle, nullptr, ServerRecyConnectionThread, recy_conn_ptr) failed in CSocket::InitSubProc");
+	log_stderr(0,
+			   "pthread_create(&recy_conn_ptr->handle, nullptr, ServerRecyConnectionThread, recy_conn_ptr) failed in CSocket::InitSubProc");
 	return false;
   }
 
-  if (timeout_wait_time_enable == 1) {
+  if (kick_timer_enable == 1) {
 	lp_thread_t heartbeat_monitor;
 	thread_container.push_back(heartbeat_monitor = new thread_t(this));
 	err = pthread_create(&heartbeat_monitor->handle, nullptr, ServerTimerQueueMonitorThread, heartbeat_monitor);
 	if (err != 0) {
-	  log_stderr(0, "pthread_create(heartbeat_monitor->handle, nullptr, ServerTimerQueueMonitorThread, heartbeat_monitor) failed in CSocket::InitSubProc");
+	  log_stderr(0,
+				 "pthread_create(heartbeat_monitor->handle, nullptr, ServerTimerQueueMonitorThread, heartbeat_monitor) failed in CSocket::InitSubProc");
 	  return false;
 	}
   }
@@ -112,6 +115,10 @@ CSocket::~CSocket() {
 }
 
 void CSocket::ShutdownSubProc() {
+  if(sem_post(&sem_event_send_queue) ==-1){
+	log_stderr(0, "sem_post(&sem_event_send_queue) failed in CSocket::InitSubProc");
+  }
+
   std::vector<lp_thread_t>::iterator iter;
   for (iter = thread_container.begin(); iter != thread_container.end(); iter++) {
 	pthread_join((*iter)->handle, nullptr);
@@ -125,10 +132,12 @@ void CSocket::ShutdownSubProc() {
 
   clear_msg_send_queue();
   clear_connection_pool();
+  clear_timer_queue();
 
   pthread_mutex_destroy(&connection_mutex);
   pthread_mutex_destroy(&send_msg_queue_mutex);
   pthread_mutex_destroy(&recy_conn_queue_mutex);
+  pthread_mutex_destroy(&timer_queue_mutex);
   sem_destroy(&sem_event_send_queue);
 }
 
@@ -148,14 +157,14 @@ void CSocket::read_conf() {
   listen_port_count = config->GetIntDefault(ANDRO_CONF_LISTEN_PORT_COUNT, listen_port_count);
 
   recy_connection_wait_time = config->GetIntDefault(ANDRO_CONF_SOCK_RECY_WAIT_TIME, recy_connection_wait_time);
-  timeout_wait_time_enable = config->GetIntDefault(ANDRO_CONF_SOCK_WAIT_TIME_ENABLE, timeout_wait_time_enable);
+  kick_timer_enable = config->GetIntDefault(ANDRO_CONF_SOCK_KICK_TIMER_ENABLE, kick_timer_enable);
   timeout_kick_enable = config->GetIntDefault(ANDRO_CONF_SOCK_TIMEOUT_KICK_ENABLE, timeout_kick_enable);
   timeout_wait_time = config->GetIntDefault(ANDRO_CONF_SOCK_MAX_WAIT_TIME, ANDRO_CONF_SOCK_MAX_WAIT_TIME_DEFAULT_VALUE);
 }
 
 bool CSocket::open_listening_sockets() {
   int socket_fd;
-  struct sockaddr_in serv_addr {};
+  struct sockaddr_in serv_addr{};
   int port;
 
   memset(&serv_addr, 0, sizeof(serv_addr));
@@ -239,7 +248,7 @@ void CSocket::msg_send(char *send_buffer) {
 }
 
 void CSocket::kick(lp_connection_t conn_ptr) {
-  if (timeout_wait_time_enable == 1) {
+  if (kick_timer_enable == 1) {
 	delete_from_timer_queue(conn_ptr);
   }
   if (conn_ptr->fd != -1) {
@@ -289,7 +298,7 @@ int CSocket::EpollOperateEvent(int fd,
 							   uint32_t other_flag,
 							   int bcation,
 							   lp_connection_t conn_ptr) const {
-  struct epoll_event ev {};
+  struct epoll_event ev{};
   memset(&ev, 0, sizeof(ev));
 
   if (event_type == EPOLL_CTL_ADD) {
@@ -333,7 +342,6 @@ int CSocket::EpollProcessEvents(int timer) {
   }
 
   lp_connection_t conn;
-  uintptr_t instance;
   uint32_t revents;
   for (int i = 0; i < events; ++i) {
 	conn = (lp_connection_t) (epoll_events[i].data.ptr);
@@ -344,7 +352,11 @@ int CSocket::EpollProcessEvents(int timer) {
 	}
 
 	if (revents & EPOLLOUT) {
-	  log_stderr(errno, "11111111111");
+	  if (revents & (EPOLLERR | EPOLLHUP | EPOLLRDHUP)) {
+		--conn->throw_send_count;
+	  } else {
+		(this->*(conn->whandler))(conn);
+	  }
 	}
   }
   return 1;
@@ -414,7 +426,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 		tmp = ntohs(pkg_header_ptr->pkg_len);
 		conn_ptr->packet_send_len = tmp;
 
-		log_stderr(errno, "about to send data %ud", conn_ptr->packet_send_len);
+		//log_stderr(errno, "about to send data %ud", conn_ptr->packet_send_len);
 
 		send_size = socket_ptr->send_proc(conn_ptr, conn_ptr->packet_send_buf_ptr, conn_ptr->packet_send_len);
 		if (send_size > 0) {
@@ -422,7 +434,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 			CMemory::FreeMemory(conn_ptr->allocated_packet_send_mem_ptr);
 			conn_ptr->allocated_packet_send_mem_ptr = nullptr;
 			conn_ptr->throw_send_count = 0;
-			log_stderr(0, "sended data finish in CSocket::ServerSendQueueThread");
+			//log_stderr(0, "sended data finish in CSocket::ServerSendQueueThread");
 		  } else {
 			conn_ptr->packet_send_buf_ptr = conn_ptr->packet_send_buf_ptr + send_size;
 			conn_ptr->packet_send_len = conn_ptr->packet_send_len - send_size;
@@ -430,7 +442,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 			if (socket_ptr->EpollOperateEvent(conn_ptr->fd, EPOLL_CTL_MOD, EPOLLOUT, 0, conn_ptr) == -1) {
 			  log_stderr(errno, "EpollOperateEvent() failed in CSocket::ServerSendQueueThread");
 			}
-			log_stderr(errno, "send's buffer was full, part[%d] of total[%d]", send_size, conn_ptr->packet_send_len);
+			//log_stderr(errno, "send's buffer was full, part[%d] of total[%d]", send_size, conn_ptr->packet_send_len);
 		  }
 		  continue;
 		} else if (send_size == 0) {
@@ -462,4 +474,6 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 
   return (void *) nullptr;
 }
+
+
 

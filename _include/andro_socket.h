@@ -148,6 +148,7 @@ class CSocket {
   time_t get_earliest_time();
   lp_message_header_t remove_first_timer();
   void delete_from_timer_queue(lp_connection_t conn_ptr);
+  void clear_timer_queue();
 
   static void *ServerSendQueueThread(void *thread_data);
   static void *ServerRecyConnectionThread(void *thread_data);
@@ -195,7 +196,7 @@ class CSocket {
   sem_t sem_event_send_queue{};
 
   // related to timer
-  int timeout_wait_time_enable;
+  int kick_timer_enable;
   pthread_mutex_t timer_queue_mutex;
   std::multimap<time_t, lp_message_header_t> timer_queue_map;
   size_t timer_queue_map_size;

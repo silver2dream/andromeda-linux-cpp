@@ -92,7 +92,7 @@ void CSocket::event_accept(lp_connection_t old_conn_ptr) {
 	  return;
 	}
 
-	if (timeout_wait_time_enable == 1) {
+	if (kick_timer_enable == 1) {
 	  push_to_timer_queue(new_conn_ptr);
 	}
 	++online_user_count;
