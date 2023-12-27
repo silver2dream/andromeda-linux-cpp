@@ -1,16 +1,5 @@
-#include <errno.h>   //errno
-#include <fcntl.h>   //open
-#include <stdarg.h>  //va_start....
-#include <stdint.h>  //uintptr_t
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>  //gettimeofday
-#include <time.h>      //localtime_r
-#include <unistd.h>    //STDERR_FILENO
-// #include <sys/socket.h>
+#include <cstdio>
 #include <arpa/inet.h>
-#include <sys/ioctl.h>  //ioctl
 
 #include "andro_func.h"
 #include "andro_socket.h"

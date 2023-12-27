@@ -14,43 +14,48 @@
 #define ANDRO_CONF_PORT_PRIFIX "Port"
 #define ANDRO_CONF_WORK_MAX_CONNECTIONS "WorkerConnections"
 #define ANDRO_CONF_WORK_THREAD_COUNT "WorkerThreadCount"
-#define ANDRO_CONF_RECY_WAIT_TIME "RecyWaitTime"
+#define ANDRO_CONF_SOCK_RECY_WAIT_TIME "SocketRecyWaitTime"
+#define ANDRO_CONF_SOCK_KICK_TIMER_ENABLE "SocketKickTimerEnable"
+#define ANDRO_CONF_SOCK_TIMEOUT_KICK_ENABLE "SocketTimeoutKick"
+#define ANDRO_CONF_SOCK_TIMEOUT_KICK_DEFAULT_VALUE (20 * 3 + 10)
+#define ANDRO_CONF_SOCK_MAX_WAIT_TIME "SocketMaxWaitTime"
+#define ANDRO_CONF_SOCK_MAX_WAIT_TIME_DEFAULT_VALUE 5
 
 class CConfig {
-   private:
-    CConfig();
+ private:
+  CConfig();
 
+ public:
+  ~CConfig();
+
+ private:
+  static CConfig *instance;
+
+ public:
+  std::vector<LPCConfItem> ConfigItems;
+
+ public:
+  bool Load(const char *conf_name);
+  const char *GetString(const char *item_name);
+  int GetIntDefault(const char *item_name, int def);
+
+ public:
+  static CConfig *GetInstance() {
+	if (instance == nullptr) {
+	  instance = new CConfig();
+	  static CRelease cr;
+	}
+	return instance;
+  }
+
+  class CRelease {
    public:
-    ~CConfig();
-
-   private:
-    static CConfig *instance;
-
-   public:
-    std::vector<LPCConfItem> ConfigItems;
-
-   public:
-    bool Load(const char *conf_name);
-    const char *GetString(const char *item_name);
-    int GetIntDefault(const char *item_name, const int def);
-
-   public:
-    static CConfig *GetInstance() {
-        if (instance == nullptr) {
-            instance = new CConfig();
-            static CRelease cr;
-        }
-        return instance;
-    }
-
-    class CRelease {
-       public:
-        ~CRelease() {
-            if (CConfig::instance) {
-                delete CConfig::instance;
-                CConfig::instance = nullptr;
-            }
-        }
-    };
+	~CRelease() {
+	  if (CConfig::instance) {
+		delete CConfig::instance;
+		CConfig::instance = nullptr;
+	  }
+	}
+  };
 };
 #endif

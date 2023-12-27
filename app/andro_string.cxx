@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include <string.h>
+#include <cstring>
 
 void Rtrim(char *string) {
     size_t len = 0;
@@ -9,7 +8,6 @@ void Rtrim(char *string) {
     len = strlen(string);
     while (len > 0 && string[len - 1] == ' ')
         string[--len] = 0;
-    return;
 }
 
 void Ltrim(char *string) {
@@ -36,5 +34,4 @@ void Ltrim(char *string) {
         tmp2++;
     }
     (*tmp2) = '\0';
-    return;
 }

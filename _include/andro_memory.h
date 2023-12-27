@@ -1,14 +1,14 @@
 #ifndef __ANDRO_MEMORY_H__
 #define __ANDRO_MEMORY_H__
 
-#include <stddef.h>
+#include <cstddef>
 
 class CMemory {
    private:
     CMemory(){};
 
    public:
-    ~CMemory(){};
+    ~CMemory()= default;
 
    private:
     static CMemory *instance;
@@ -36,8 +36,8 @@ class CMemory {
     };
 
    public:
-    void *AllocMemory(int mem_count, bool is_memset);
-    void FreeMemeory(void *ptr);
+    static void *AllocMemory(int mem_count, bool is_memset);
+    static void FreeMemory(void *ptr);
 };
 
 #endif

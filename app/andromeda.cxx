@@ -1,9 +1,5 @@
-#include <signal.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
-
 #include "andro_conf.h"
 #include "andro_crc32.h"
 #include "andro_func.h"
@@ -13,6 +9,7 @@
 #include "andro_memory.h"
 #include "andro_socket.h"
 
+// Function declarations
 static void free_resource();
 
 size_t G_ARGV_NEED_MEM = 0;
@@ -33,85 +30,84 @@ CLogic G_SOCKET;
 CThreadPool G_THREAD_POOL;
 
 int main(int argc, char *const *argv) {
-    int exitcode = 0;
+  int exitcode = 0;
+  G_STOP_EVENT = 0;
 
-    G_STOP_EVENT = 0;
+  andro_pid = getpid();
+  andro_ppid = getppid();
+  G_ARGV_NEED_MEM = 0;
+  for (int i = 0; i < argc; i++) {
+    G_ARGV_NEED_MEM += strlen(argv[i]) + 1;
+  }
 
-    andro_pid = getpid();
-    andro_ppid = getppid();
-    G_ARGV_NEED_MEM = 0;
-    for (int i = 0; i < argc; i++) {
-        G_ARGV_NEED_MEM += strlen(argv[i]) + 1;
-    }
+  for (int i = 0; environ[i]; i++) {
+    G_ENV_NEED_MEM += strlen(environ[i]) + 1;
+  }
 
-    for (int i = 0; environ[i]; i++) {
-        G_ENV_NEED_MEM += strlen(environ[i]) + 1;
-    }
+  G_OS_ARGC = argc;
+  G_OS_ARGV = (char **) argv;
 
-    G_OS_ARGC = argc;
-    G_OS_ARGV = (char **)argv;
+  andro_log.fd = -1;
+  process_type = ANDRO_PROCESS_MASTER;
+  andro_reap = 0;
 
-    andro_log.fd = -1;
-    process_type = ANDRO_PROCESS_MASTER;
-    andro_reap = 0;
-
-    CConfig *config = CConfig::GetInstance();
-    if (config->Load(ANDRO_CONF_FILE) == false) {
-        log_init();
-        log_stderr(0, "can't load config[%s] doc", ANDRO_CONF_FILE);
-        exitcode = 2;
-        goto lblexit;
-    }
-
-    CMemory::GetInstance();
-    CCRC32::GetInstance();
-
+  CConfig *config = CConfig::GetInstance();
+  if (!config->Load(ANDRO_CONF_FILE)) {
     log_init();
+    log_stderr(0, "can't load config[%s] doc", ANDRO_CONF_FILE);
+    exitcode = 2;
+    goto lblexit;
+  }
 
-    if (init_signals() != 0) {
-        exitcode = 1;
-        goto lblexit;
+  CMemory::GetInstance();
+  CCRC32::GetInstance();
+
+  log_init();
+
+  if (init_signals() != 0) {
+    exitcode = 1;
+    goto lblexit;
+  }
+
+  if (!G_SOCKET.Init()) {
+    exitcode = 1;
+    goto lblexit;
+  }
+
+  init_proctitle();
+
+  if (config->GetIntDefault(ANDRO_CONF_DAEMON_MODE, 0) == 1) {
+    int daemon_reuslt = daemon();
+    if (daemon_reuslt == -1) {  // Fork failed.
+      exitcode = 1;
+      goto lblexit;
     }
 
-    if (G_SOCKET.Init() == false) {
-        exitcode = 1;
-        goto lblexit;
+    if (daemon_reuslt == 1) {  // Original parent process.
+      free_resource();
+      exitcode = 0;
+      return exitcode;
     }
 
-    init_proctitle();
+    G_DAEMONIZED = 1;
+  }
 
-    if (config->GetIntDefault(ANDRO_CONF_DAEMON_MODE, 0) == 1) {
-        int daemon_reuslt = daemon();
-        if (daemon_reuslt == -1) {  // Fork failed.
-            exitcode = 1;
-            goto lblexit;
-        }
+  master_process_cycle();
 
-        if (daemon_reuslt == 1) {  // Original parenet process.
-            free_resource();
-            exitcode = 0;
-            return exitcode;
-        }
-
-        G_DAEMONIZED = 1;
-    }
-
-    master_process_cycle();
-
-lblexit:
-    log_stderr(0, "process exit!, pid=%P", getpid());
-    free_resource();
-    return exitcode;
+  lblexit:
+  log_stderr(0, "process exit!, pid=%P", getpid());
+  free_resource();
+  return exitcode;
 }
 
 void free_resource() {
-    if (G_ENVMEM) {
-        delete[] G_ENVMEM;
-        G_ENVMEM = nullptr;
-    }
+  if (G_ENVMEM) {
+    delete[] G_ENVMEM;
+    G_ENVMEM = nullptr;
+  }
 
-    if (andro_log.fd != STDERR_FILENO && andro_log.fd != -1) {
-        close(andro_log.fd);
-        andro_log.fd = -1;
-    }
+  if (andro_log.fd != STDERR_FILENO && andro_log.fd != -1) {
+    close(andro_log.fd);
+    andro_log.fd = -1;
+  }
 }

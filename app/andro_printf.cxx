@@ -1,11 +1,8 @@
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdarg>
+#include <cstdint>
+#include <cstring>
 
 #include "andro_func.h"
-#include "andro_global.h"
 #include "andro_macro.h"
 
 static u_char* sprintf_num(u_char* buffer, u_char* last, uint64_t ui64, u_char zero, uintptr_t hexadecimal, uintptr_t width);

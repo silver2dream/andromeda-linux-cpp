@@ -1,2 +1,0 @@
-BIN = andromeda
-include $(BUILD_ROOT)/common.mk

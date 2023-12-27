@@ -2,6 +2,7 @@
 #define __ANDRO_FUNC_H__
 
 #include <sys/types.h>
+#include <cstdarg>
 
 void Rtrim(char *string);
 void Ltrim(char *string);
@@ -22,7 +23,7 @@ u_char *vslprintf(u_char *buffer, u_char *last, const char *fmt, va_list args);
 
 // Related to signal and master process.
 int init_signals();
-void master_process_cycle();
+[[noreturn]] void master_process_cycle();
 int daemon();
 void process_events_and_timers();
 

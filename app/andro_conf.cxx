@@ -1,8 +1,8 @@
 #include "andro_conf.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include <vector>
 
@@ -10,7 +10,7 @@
 
 CConfig *CConfig::instance = nullptr;
 
-CConfig::CConfig() {}
+CConfig::CConfig() = default;
 
 CConfig::~CConfig() {
     std::vector<LPCConfItem>::iterator pos;
@@ -55,7 +55,7 @@ bool CConfig::Load(const char *conf_name) {
 
         char *tmp = strchr(line_buf, '=');
         if (tmp != nullptr) {
-            LPCConfItem confitem = new CConfItem;
+            auto confitem = new CConfItem;
             memset(confitem, 0, sizeof(CConfItem));
             strncpy(confitem->ItemName, line_buf, (int)(tmp - line_buf));
             strcpy(confitem->ItemContent, tmp + 1);
