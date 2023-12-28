@@ -28,8 +28,8 @@ jobs:
     - name: Run Protoc
       run: |
         cd build
-        pwd
-        ls
+        ls /home/runner/work/andromeda-linux-cpp/andromeda-linux-cpp
+        ls /home/runner/work/andromeda-linux-cpp/andromeda-linux-cpp/build
         protoc -I=./proto --cpp_out=./generated ./proto/*.proto
     - name: Run CMake
       run: |
