@@ -29,6 +29,7 @@ jobs:
       run: |
         cd build
         ls /home/runner/work/andromeda-linux-cpp/andromeda-linux-cpp
+        echo ---------------------------------
         ls /home/runner/work/andromeda-linux-cpp/andromeda-linux-cpp/build
         protoc -I=./proto --cpp_out=./generated ./proto/*.proto
     - name: Run CMake
