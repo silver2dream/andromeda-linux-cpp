@@ -22,14 +22,18 @@ jobs:
         make 
         make check
         sudo make install
-        sudo ldconfig 
-    - name: Run Cmake
-      run: cmake .
+        sudo ldconfig
+    - name: Create build directory
+      run: mkdir build && cd build
+    - name: Run CMake
+      run: |
+        cd build
+        cmake ..
     - name: Build
       run: |
-        cd cmake-build-debug
+        cd build
         make
     - name: Run Valgrind Memcheck
       run: |
-        cd cmake-build-debug
+        cd build
         make memcheck
