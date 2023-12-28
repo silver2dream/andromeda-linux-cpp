@@ -25,6 +25,10 @@ jobs:
         sudo ldconfig
     - name: Create build directory
       run: mkdir build && cd build
+    - name: Run Protoc
+      run: |
+        cd build
+        protoc -I=./proto --cpp_out=./generated ./proto/*.proto
     - name: Run CMake
       run: |
         cd build
@@ -32,8 +36,6 @@ jobs:
     - name: Build
       run: |
         cd build
-        make clear
-        make protoc
         make
     - name: Run Valgrind Memcheck
       run: |
