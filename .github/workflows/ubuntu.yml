@@ -32,6 +32,8 @@ jobs:
     - name: Build
       run: |
         cd build
+        make clear
+        make protoc
         make
     - name: Run Valgrind Memcheck
       run: |
