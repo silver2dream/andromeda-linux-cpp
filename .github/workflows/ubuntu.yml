@@ -11,23 +11,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: intall deps
-      run: |
-        sudo apt-get install cmake valgrind autoconf automake libtool unzip 
-        git clone -b v3.21.12 https://github.com/protocolbuffers/protobuf.git 
-        cd protobuf
-        git submodule update --init --recursive 
-        ./autogen.sh
-        ./configure
-        make 
-        make check
-        sudo make install
-        sudo ldconfig
+    # - name: intall deps
+    #   run: |
+    #     sudo apt-get install cmake valgrind autoconf automake libtool unzip 
+    #     git clone -b v3.21.12 https://github.com/protocolbuffers/protobuf.git 
+    #     cd protobuf
+    #     git submodule update --init --recursive 
+    #     ./autogen.sh
+    #     ./configure
+    #     make 
+    #     make check
+    #     sudo make install
+    #     sudo ldconfig
     - name: Create build directory
       run: mkdir build && cd build
     - name: Run Protoc
       run: |
         cd build
+        pwd
+        ls
         protoc -I=./proto --cpp_out=./generated ./proto/*.proto
     - name: Run CMake
       run: |
