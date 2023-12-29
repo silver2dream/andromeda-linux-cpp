@@ -31,6 +31,7 @@ jobs:
       run: |
         cd build
         make memcheck & sleep 3
+        cat ./valgrind.log
         pgrep -f "/usr/bin/valgrind.bin --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=./valgrind.log ./andromeda" | xargs kill -9
         if grep -q "definitely lost: 0 bytes in 0 blocks" valgrind.log \
         && grep -q "indirectly lost: 0 bytes in 0 blocks" valgrind.log \
