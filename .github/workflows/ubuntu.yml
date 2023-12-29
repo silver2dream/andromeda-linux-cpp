@@ -31,8 +31,9 @@ jobs:
       run: |
         cd build
         make memcheck
+        pgrep -f "/usr/bin/valgrind.bin --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=./valgrind.log ./andromeda"
         cat ./valgrind.log
-        sleep 10
+        sleep 5
         pgrep -f "/usr/bin/valgrind.bin --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=./valgrind.log ./andromeda" | xargs kill -9
         if grep -q "definitely lost: 0 bytes in 0 blocks" valgrind.log \
         && grep -q "indirectly lost: 0 bytes in 0 blocks" valgrind.log \
@@ -42,6 +43,7 @@ jobs:
           echo "Memory leaks detected"
           exit 1
         fi
+      timeout-minutes: 3
     - name: Upload Valgrind Log
       if: failure()
       uses: actions/upload-artifact@v2
