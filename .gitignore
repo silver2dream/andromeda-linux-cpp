@@ -2,3 +2,5 @@
 logs/*.log
 /.idea/
 /cmake-build-debug/
+/.github/workflows/lib/protoc
+/.github/workflows/Dockerfile

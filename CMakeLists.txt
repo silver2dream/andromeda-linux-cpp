@@ -30,7 +30,7 @@ add_custom_target(clear
 )
 
 add_custom_target(memcheck
-        COMMAND valgrind --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=${BUILD_ROOT}/log.txt ./andromeda
+        COMMAND valgrind --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=./valgrind.log ./andromeda
 )
 
 add_custom_target(protoc
