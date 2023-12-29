@@ -32,10 +32,9 @@ jobs:
         cd build
         make memcheck & sleep 3
         pgrep -f "/usr/bin/valgrind.bin --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=./valgrind.log ./andromeda" | xargs kill -9
-        if grep -q "definitely lost: 0 bytes in 0 blocks" valgrind.log 
-        && grep -q "indirectly lost: 0 bytes in 0 blocks" valgrind.log 
-        && grep -q "possibly lost: 0 bytes in 0 blocks" valgrind.log; 
-        then
+        if grep -q "definitely lost: 0 bytes in 0 blocks" valgrind.log \
+        && grep -q "indirectly lost: 0 bytes in 0 blocks" valgrind.log \
+        && grep -q "possibly lost: 0 bytes in 0 blocks" valgrind.log; then
           echo "No memory leaks detected"
         else
           echo "Memory leaks detected"
