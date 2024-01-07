@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     container: ghcr.io/silver2dream/andromeda-build-env:latest
     steps:
     - uses: actions/checkout@v3
