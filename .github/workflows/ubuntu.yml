@@ -31,8 +31,8 @@ jobs:
       run: |
         cd build
         #valgrind --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=./valgrind.log ./andromeda
-        valgrind --tool=memcheck --leak-check=full --log-file=./valgrind.log ./andromeda
-        #make memcheck
+        #valgrind --tool=memcheck --leak-check=full --log-file=./valgrind.log ./andromeda
+        make memcheck
         #pgrep -f "/usr/bin/valgrind.bin --tool=memcheck --leak-check=full --show-reachable=yes --trace-children=yes --log-file=./valgrind.log ./andromeda"
         cat ./valgrind.log
         #sleep 5
