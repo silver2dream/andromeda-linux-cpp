@@ -115,7 +115,7 @@ CSocket::~CSocket() {
 }
 
 void CSocket::ShutdownSubProc() {
-  if(sem_post(&sem_event_send_queue) ==-1){
+  if (sem_post(&sem_event_send_queue) == -1) {
 	log_stderr(0, "sem_post(&sem_event_send_queue) failed in CSocket::InitSubProc");
   }
 
@@ -160,6 +160,11 @@ void CSocket::read_conf() {
   kick_timer_enable = config->GetIntDefault(ANDRO_CONF_SOCK_KICK_TIMER_ENABLE, kick_timer_enable);
   timeout_kick_enable = config->GetIntDefault(ANDRO_CONF_SOCK_TIMEOUT_KICK_ENABLE, timeout_kick_enable);
   timeout_wait_time = config->GetIntDefault(ANDRO_CONF_SOCK_MAX_WAIT_TIME, ANDRO_CONF_SOCK_MAX_WAIT_TIME_DEFAULT_VALUE);
+
+  flood_attack_detection_enable =
+	  config->GetIntDefault(ANDRO_CONF_SECURITY_FLOOD_ATTACK_DETECTION_ENABLE, flood_attack_detection_enable);
+  flood_time_interval = config->GetIntDefault(ANDRO_CONF_SECURITY_FLOOD_TIME_INTERVAL, flood_time_interval);
+  flood_kick_count = config->GetIntDefault(ANDRO_CONF_SECURITY_FLOOD_KICK_COUNTER, flood_kick_count);
 }
 
 bool CSocket::open_listening_sockets() {
@@ -261,6 +266,27 @@ void CSocket::kick(lp_connection_t conn_ptr) {
   }
 
   push_to_recy_connect_queue(conn_ptr);
+}
+
+bool CSocket::detect_flood(lp_connection_t conn_ptr) {
+  struct timeval curr_time_data{};
+  uint64_t curr_time;
+  bool result = false;
+
+  gettimeofday(&curr_time_data, nullptr);
+  curr_time = (curr_time_data.tv_sec * 1000 + curr_time_data.tv_usec / 1000); //ms
+  if ((curr_time - conn_ptr->flood_kick_last_time) < flood_time_interval) {
+	conn_ptr->flood_attack_count++;
+  }else{
+	conn_ptr->flood_attack_count = 0;
+  }
+  conn_ptr->flood_kick_last_time = curr_time;
+
+  if(conn_ptr->flood_kick_last_time>= flood_kick_count){
+	result = true;
+  }
+
+  return result;
 }
 
 int CSocket::EpollInit() {
@@ -474,6 +500,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 
   return (void *) nullptr;
 }
+
 
 
 

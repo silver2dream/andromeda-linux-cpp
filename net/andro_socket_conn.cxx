@@ -28,6 +28,11 @@ void andro_connection_s::GetOneToUse() {
   throw_send_count = 0;
   allocated_packet_send_mem_ptr = nullptr;
   events = 0;
+
+  last_ping_time = time(nullptr);
+
+  flood_kick_last_time = 0;
+  flood_attack_count = 0;
 }
 
 void andro_connection_s::PutOneToFree() {
@@ -156,8 +161,10 @@ lblRRTD:
 		  continue;
 		}
 
-		if(conn_ptr->throw_send_count>0){
-		  log_stderr(0, "throw_send_count of connection[%d] was not zero that should not be happening, in CSocket::ServerRecyConnectionThread()", conn_ptr->fd);
+		if (conn_ptr->throw_send_count > 0) {
+		  log_stderr(0,
+					 "throw_send_count of connection[%d] was not zero that should not be happening, in CSocket::ServerRecyConnectionThread()",
+					 conn_ptr->fd);
 		}
 
 		--socket_ptr->total_recy_connection_size;

@@ -20,6 +20,9 @@
 #define ANDRO_CONF_SOCK_TIMEOUT_KICK_DEFAULT_VALUE (20 * 3 + 10)
 #define ANDRO_CONF_SOCK_MAX_WAIT_TIME "SocketMaxWaitTime"
 #define ANDRO_CONF_SOCK_MAX_WAIT_TIME_DEFAULT_VALUE 5
+#define ANDRO_CONF_SECURITY_FLOOD_ATTACK_DETECTION_ENABLE "SecurityFloodAttackDetectionEnable"
+#define ANDRO_CONF_SECURITY_FLOOD_TIME_INTERVAL "SecurityFloodTimeInterval"
+#define ANDRO_CONF_SECURITY_FLOOD_KICK_COUNTER "SecurityFloodKickCounter"
 
 class CConfig {
  private:

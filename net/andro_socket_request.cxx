@@ -10,6 +10,8 @@
 #include "andro_socket.h"
 
 void CSocket::read_request_handler(lp_connection_t conn_ptr) {
+  bool is_flood = false;
+
   ssize_t result = recv_proc(conn_ptr, conn_ptr->packet_recv_buf_ptr, conn_ptr->packet_recv_len);
   log_stderr(errno, "result:%d", result);
   if (result <= 0) {
@@ -18,31 +20,43 @@ void CSocket::read_request_handler(lp_connection_t conn_ptr) {
 
   if (conn_ptr->packet_stat == ANDRO_PKG_STAT_HEAD_INIT) {
 	if (result == ANDRO_PKG_HEADER_LEN) {
-	  proc_header_handler(conn_ptr);
+	  proc_header_handler(conn_ptr, is_flood);
 	} else {
 	  conn_ptr->packet_stat = ANDRO_PKG_STAT_HEAD_RECVING;
 	  conn_ptr->DataOffset(result);
 	}
   } else if (conn_ptr->packet_stat == ANDRO_PKG_STAT_HEAD_RECVING) {
 	if (conn_ptr->packet_recv_len == result) {
-	  proc_header_handler(conn_ptr);
+	  proc_header_handler(conn_ptr, is_flood);
 	} else {
 	  conn_ptr->DataOffset(result);
 	}
   } else if (conn_ptr->packet_stat == ANDRO_PKG_STAT_BODY_INIT) {
 	if (result == conn_ptr->packet_recv_len) {
-	  proc_data_handler(conn_ptr);
+	  if (flood_attack_detection_enable) {
+		is_flood = detect_flood(conn_ptr);
+	  }
+	  proc_data_handler(conn_ptr, is_flood);
 	} else {
 	  conn_ptr->packet_stat = ANDRO_PKG_STAT_BODY_RECVING;
 	  conn_ptr->DataOffset(result);
 	}
   } else if (conn_ptr->packet_stat == ANDRO_PKG_STAT_BODY_RECVING) {
 	if (result == conn_ptr->packet_recv_len) {
-	  proc_data_handler(conn_ptr);
+	  if (flood_attack_detection_enable) {
+		is_flood = detect_flood(conn_ptr);
+	  }
+	  proc_data_handler(conn_ptr, is_flood);
 	} else {
 	  conn_ptr->DataOffset(result);
 	}
   }
+
+  if (is_flood) {
+	log_stderr(errno, "detected flood attack, kick connection[%d]", conn_ptr->fd);
+	kick(conn_ptr);
+  }
+
 }
 
 ssize_t CSocket::recv_proc(lp_connection_t conn_ptr, char *buffer, ssize_t buf_len) {
@@ -98,7 +112,7 @@ ssize_t CSocket::recv_proc(lp_connection_t conn_ptr, char *buffer, ssize_t buf_l
   return n;
 }
 
-void CSocket::proc_header_handler(lp_connection_t conn_ptr) {
+void CSocket::proc_header_handler(lp_connection_t conn_ptr, bool &is_flood) {
   lp_packet_header_t pkg_header_ptr;
   pkg_header_ptr = (lp_packet_header_t) (conn_ptr->packet_head_info);
 
@@ -120,7 +134,10 @@ void CSocket::proc_header_handler(lp_connection_t conn_ptr) {
 	tmp_buff_ptr += ANDRO_MSG_HEADER_LEN;
 	memcpy(tmp_buff_ptr, pkg_header_ptr, ANDRO_PKG_HEADER_LEN);
 	if (pkg_len == ANDRO_PKG_HEADER_LEN) {
-	  proc_data_handler(conn_ptr);
+	  if (flood_attack_detection_enable) {
+		is_flood = detect_flood(conn_ptr);
+	  }
+	  proc_data_handler(conn_ptr, is_flood);
 	} else {
 	  conn_ptr->packet_stat = ANDRO_PKG_STAT_BODY_INIT;
 	  conn_ptr->packet_recv_buf_ptr = tmp_buff_ptr + ANDRO_PKG_HEADER_LEN;
@@ -130,8 +147,12 @@ void CSocket::proc_header_handler(lp_connection_t conn_ptr) {
 
 }
 
-void CSocket::proc_data_handler(lp_connection_t conn_ptr) {
-  G_THREAD_POOL.PushToMsgQueueAndAwake(conn_ptr->allocated_packet_recv_mem_ptr);
+void CSocket::proc_data_handler(lp_connection_t conn_ptr, bool &is_flood) {
+  if (!is_flood) {
+	G_THREAD_POOL.PushToMsgQueueAndAwake(conn_ptr->allocated_packet_recv_mem_ptr);
+  } else {
+	CMemory::FreeMemory(conn_ptr->allocated_packet_recv_mem_ptr);
+  }
 
   conn_ptr->allocated_packet_recv_mem_ptr = nullptr;
   conn_ptr->ResetRecv();

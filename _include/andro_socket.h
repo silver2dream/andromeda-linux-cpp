@@ -82,6 +82,9 @@ struct andro_connection_s {
 
   time_t last_ping_time{};
 
+  uint64_t flood_kick_last_time{};
+  int flood_attack_count{};
+
   lp_connection_t next_conn{};// This is a pointer and assign to element of singal way linked-list
 
   void DataOffset(ssize_t len) {
@@ -129,8 +132,8 @@ class CSocket {
   void close_connection(lp_connection_t conn_ptr);
 
   ssize_t recv_proc(lp_connection_t conn_ptr, char *buffer, ssize_t buf_len);
-  void proc_header_handler(lp_connection_t conn_ptr);
-  void proc_data_handler(lp_connection_t conn_ptr);
+  void proc_header_handler(lp_connection_t conn_ptr, bool &is_flood);
+  void proc_data_handler(lp_connection_t conn_ptr, bool &is_flood);
   void clear_msg_send_queue();
 
   static ssize_t send_proc(lp_connection_t conn_ptr, char *buffer, ssize_t size);
@@ -149,6 +152,9 @@ class CSocket {
   lp_message_header_t remove_first_timer();
   void delete_from_timer_queue(lp_connection_t conn_ptr);
   void clear_timer_queue();
+
+  // related to net security
+  bool detect_flood(lp_connection_t conn_ptr);
 
   static void *ServerSendQueueThread(void *thread_data);
   static void *ServerRecyConnectionThread(void *thread_data);
@@ -203,6 +209,11 @@ class CSocket {
   time_t timer_value;
 
   std::atomic<int> online_user_count;
+
+  // related to net security
+  int flood_attack_detection_enable;
+  int flood_time_interval;
+  int flood_kick_count;
 
 };
 
