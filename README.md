@@ -4,6 +4,9 @@
 [license]: LICENSE
 
 ## Prerequisite
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2c1068c628944bc8adf316062f99d8c2)](https://app.codacy.com/gh/silver2dream/andromeda-linux-cpp?utm_source=github.com&utm_medium=referral&utm_content=silver2dream/andromeda-linux-cpp&utm_campaign=Badge_Grade)
+
 * makefile
 * gcc
 * g++
