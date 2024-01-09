@@ -60,6 +60,13 @@ void CSocket::event_accept(lp_connection_t old_conn_ptr) {
 	  return;
 	}
 
+	if (connection_pool.size() > (worker_max_connections * 5)) {
+	  if (free_connection_pool.size() < worker_max_connections) {
+		close(conn_fd);
+		return;
+	  }
+	}
+
 	new_conn_ptr = get_connection(conn_fd);
 	if (new_conn_ptr == nullptr) {
 	  if (close(conn_fd) == -1) {

@@ -170,3 +170,7 @@ void CThreadPool::Call() {
         }
     }
 }
+
+int CThreadPool::GetMsgQueueSize() {
+  return msg_queue_size;
+}

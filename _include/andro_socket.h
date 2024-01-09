@@ -82,8 +82,10 @@ struct andro_connection_s {
 
   time_t last_ping_time{};
 
+  // related to net security
   uint64_t flood_kick_last_time{};
   int flood_attack_count{};
+  std::atomic<int> send_count;
 
   lp_connection_t next_conn{};// This is a pointer and assign to element of singal way linked-list
 
@@ -106,6 +108,8 @@ class CSocket {
   virtual bool Init();
   virtual bool InitSubProc();
   virtual void ShutdownSubProc();
+
+  void PrintThreadInfo();
 
  public:
   virtual void ThreadRecvProcFunc(char *msg_buffer);
@@ -194,8 +198,8 @@ class CSocket {
   std::vector<lp_listening_t> listen_socket_list;
   struct epoll_event epoll_events[ANDRO_MAX_EPOLL_WAIT_EVENTS]{};
 
-  std::list<char *> msg_send_queue;
-  std::atomic<int> msg_send_queue_size{};
+  std::list<char *> send_msg_queue;
+  std::atomic<int> send_msg_queue_size{};
 
   std::vector<lp_thread_t> thread_container;
   pthread_mutex_t send_msg_queue_mutex{};
@@ -215,6 +219,9 @@ class CSocket {
   int flood_time_interval;
   int flood_kick_count;
 
+  // related to metric
+	time_t last_print_time;
+	int discard_send_pkg_count;
 };
 
 #endif

@@ -28,12 +28,15 @@ CSocket::CSocket() {
 
   epoll_handler = -1;
 
-  msg_send_queue_size = 0;
+  send_msg_queue_size = 0;
   total_recy_connection_size = 0;
   timer_queue_map_size = 0;
   timer_value = 0;
+  discard_send_pkg_count = 0;
 
   online_user_count = 0;
+
+  last_print_time = 0;
 }
 
 bool CSocket::Init() {
@@ -144,9 +147,9 @@ void CSocket::ShutdownSubProc() {
 void CSocket::clear_msg_send_queue() {
   char *tmp_ptr;
 
-  while (!msg_send_queue.empty()) {
-	tmp_ptr = msg_send_queue.front();
-	msg_send_queue.pop_front();
+  while (!send_msg_queue.empty()) {
+	tmp_ptr = send_msg_queue.front();
+	send_msg_queue.pop_front();
 	CMemory::FreeMemory(tmp_ptr);
   }
 }
@@ -244,8 +247,28 @@ void CSocket::close_listening_sockets() {
 
 void CSocket::msg_send(char *send_buffer) {
   CLock lock(&send_msg_queue_mutex);
-  msg_send_queue.push_back(send_buffer);
-  ++msg_send_queue_size;
+
+  if (send_msg_queue_size > ANDRO_CONF_METRIC_MAX_SEND_MSG_QUEUE_SIZE_DEFAULT_VALUE) {
+	discard_send_pkg_count++;
+	CMemory::FreeMemory(send_buffer);
+	return;
+  }
+
+  auto msg_header_ptr = (lp_message_header_t) send_buffer;
+  lp_connection_t conn_ptr = msg_header_ptr->conn_ptr;
+  if (conn_ptr->send_count > ANDRO_CONF_METRIC_MAX_CONNECTION_SEND_COUNT_DEFAULT_VALUE) {
+	log_stderr(0,
+			   "in CSocekt::msg_send(), it was found that user[%d] has accumulated a large number of packets pending to be sent, hence the connection with him was severed");
+
+	discard_send_pkg_count++;
+	CMemory::FreeMemory(send_buffer);
+	kick(conn_ptr);
+	return;
+  }
+
+  ++conn_ptr->send_count;
+  send_msg_queue.push_back(send_buffer);
+  ++send_msg_queue_size;
 
   if (sem_post(&sem_event_send_queue) == -1) {
 	log_stderr(0, "sem_post(&sem_event_send_queue) failed in CSocket::msg_send");
@@ -277,16 +300,46 @@ bool CSocket::detect_flood(lp_connection_t conn_ptr) {
   curr_time = (curr_time_data.tv_sec * 1000 + curr_time_data.tv_usec / 1000); //ms
   if ((curr_time - conn_ptr->flood_kick_last_time) < flood_time_interval) {
 	conn_ptr->flood_attack_count++;
-  }else{
+  } else {
 	conn_ptr->flood_attack_count = 0;
   }
   conn_ptr->flood_kick_last_time = curr_time;
 
-  if(conn_ptr->flood_kick_last_time>= flood_kick_count){
+  if (conn_ptr->flood_kick_last_time >= flood_kick_count) {
 	result = true;
   }
 
   return result;
+}
+
+void CSocket::PrintThreadInfo() {
+  auto curr_time = time(nullptr);
+  if (curr_time - last_print_time > ANDRO_CONF_METRIC_TIME_DEFAULT_VALUE) {
+	auto recv_msg_queue_size = G_THREAD_POOL.GetMsgQueueSize();
+
+	last_print_time = curr_time;
+	int duplicate_online_user_count = online_user_count;
+	int duplicate_send_msg_queue_size = send_msg_queue_size;
+	log_stderr(0, "------------------------------------begin--------------------------------------");
+	log_stderr(0, "online_user/max(%d/%d)", duplicate_online_user_count, worker_max_connections);
+	log_stderr(0,
+			   "free_connections/total_connections/recycle_connections(%d/%d/%d)",
+			   free_connection_pool.size(),
+			   connection_pool.size(),
+			   recy_connection_pool.size());
+	log_stderr(0, "timer_queue_size(%d)", timer_queue_map.size());
+	log_stderr(0,
+			   "recv_msg_queue_size/send_msg_queue_size(%d/%d), discard_send_pkg_count",
+			   duplicate_online_user_count,
+			   worker_max_connections,
+			   discard_send_pkg_count);
+	if (recv_msg_queue_size > ANDRO_CONF_METRIC_MAX_RECV_MSG_QUEUE_SIZE_DEFAULT_VALUE) {
+	  log_stderr(0,
+				 "the number of entries in the receive queue is too large (%d), consider rate limiting or increasing the number of processing threads",
+				 recv_msg_queue_size);
+	}
+	log_stderr(0, "-------------------------------------end---------------------------------------");
+  }
 }
 
 int CSocket::EpollInit() {
@@ -412,7 +465,7 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 	  break;
 	}
 
-	if (socket_ptr->msg_send_queue_size > 0) {
+	if (socket_ptr->send_msg_queue_size > 0) {
 	  err = pthread_mutex_lock(&socket_ptr->send_msg_queue_mutex);
 	  if (err != 0) {
 		log_stderr(err,
@@ -420,8 +473,8 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 				   err);
 	  }
 
-	  pos = socket_ptr->msg_send_queue.begin();
-	  posend = socket_ptr->msg_send_queue.end();
+	  pos = socket_ptr->send_msg_queue.begin();
+	  posend = socket_ptr->send_msg_queue.end();
 
 	  while (pos != posend) {
 		msg_buffer = (*pos);
@@ -432,8 +485,8 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 		if (conn_ptr->sequence != msg_header_ptr->sequence) {
 		  pos2 = pos;
 		  pos++;
-		  socket_ptr->msg_send_queue.erase(pos2);
-		  --socket_ptr->msg_send_queue_size;
+		  socket_ptr->send_msg_queue.erase(pos2);
+		  --socket_ptr->send_msg_queue_size;
 		  CMemory::FreeMemory(msg_buffer);
 		  continue;
 		}
@@ -443,11 +496,13 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 		  continue;
 		}
 
+		--conn_ptr->send_count;
+
 		conn_ptr->allocated_packet_send_mem_ptr = msg_buffer;
 		pos2 = pos;
 		pos++;
-		socket_ptr->msg_send_queue.erase(pos2);
-		--socket_ptr->msg_send_queue_size;
+		socket_ptr->send_msg_queue.erase(pos2);
+		--socket_ptr->send_msg_queue_size;
 		conn_ptr->packet_send_buf_ptr = (char *) pkg_header_ptr;
 		tmp = ntohs(pkg_header_ptr->pkg_len);
 		conn_ptr->packet_send_len = tmp;
@@ -500,6 +555,8 @@ void *CSocket::ServerSendQueueThread(void *thread_data) {
 
   return (void *) nullptr;
 }
+
+
 
 
 

@@ -33,6 +33,7 @@ void andro_connection_s::GetOneToUse() {
 
   flood_kick_last_time = 0;
   flood_attack_count = 0;
+  send_count = 0;
 }
 
 void andro_connection_s::PutOneToFree() {

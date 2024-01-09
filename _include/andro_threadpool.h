@@ -17,6 +17,7 @@ class CThreadPool {
   void StopAll();
   void PushToMsgQueueAndAwake(char *buffer);
   void Call();
+  int GetMsgQueueSize();
 
  private:
   static void *thread_func(void *thread_data);
@@ -47,6 +48,6 @@ class CThreadPool {
   std::vector<lp_thread_t> thread_vector;
 
   std::list<char *> msg_queue;
-  int msg_queue_size;
+  int msg_queue_size{};
 };
 #endif
