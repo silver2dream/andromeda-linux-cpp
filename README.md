@@ -18,12 +18,12 @@ valgrind --tool = memcheck --leak-check=full ./andromeda
 
 ## Conventional Commits
 ```markdown
-feat：新功能（feature）
-fix：修復 bug
-docs：文檔改動
-style：不影響程式碼意義的改動（空格、格式化、缺分號等）
-refactor：重構（即不是新增功能，也不是修改 bug 的程式碼變更）
-perf：改善效能的程式碼更改
-test：增加缺少的測試或更正現有的測試
-chore：對建置過程或輔助工具和函式庫的變更（不影響原始檔、測試）
+feat: A new feature
+fix: Fixing a bug
+docs: Documentation changes
+style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc.)
+refactor: Refactoring code (neither adding a feature nor fixing a bug)
+perf: Changes to improve performance
+test: Adding missing tests or correcting existing tests
+chore: Changes to the build process or auxiliary tools and libraries (does not affect source files, tests)
 ```
