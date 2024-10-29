@@ -305,7 +305,7 @@ bool CSocket::detect_flood(lp_connection_t conn_ptr) {
   }
   conn_ptr->flood_kick_last_time = curr_time;
 
-  if (conn_ptr->flood_kick_last_time >= flood_kick_count) {
+  if (static_cast<int>(conn_ptr->flood_kick_last_time) >= flood_kick_count) {
 	result = true;
   }
 
