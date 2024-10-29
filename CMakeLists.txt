@@ -1,8 +1,16 @@
 cmake_minimum_required(VERSION 3.12)
 project(andromeda-linux-cpp)
 
+# 設置默認構建類型為 Debug
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# 設置 Debug 模式下的編譯標誌
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 
 set(BUILD_ROOT ${CMAKE_SOURCE_DIR})
 
