@@ -1,3 +1,5 @@
+[English](README.md) | [繁體中文](README-zh-TW.md)
+---
 # Andromeda Linux C++
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/silver2dream/andromeda-linux-cpp/ubuntu.yml?logo=github)
