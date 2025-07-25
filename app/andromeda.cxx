@@ -36,12 +36,19 @@ int main(int argc, char *const *argv) {
   andro_pid = getpid();
   andro_ppid = getppid();
   G_ARGV_NEED_MEM = 0;
-  for (int i = 0; i < argc; i++) {
-    G_ARGV_NEED_MEM += strlen(argv[i]) + 1;
+  
+  // Safe calculation of argv memory needs
+  for (int i = 0; i < argc && argv[i]; i++) {
+    // Use strnlen to safely calculate length with reasonable limit
+    size_t arg_len = strnlen(argv[i], 4096); // Max 4KB per argument
+    G_ARGV_NEED_MEM += arg_len + 1;
   }
 
+  // Safe calculation of environment memory needs
   for (int i = 0; environ[i]; i++) {
-    G_ENV_NEED_MEM += strlen(environ[i]) + 1;
+    // Use strnlen to safely calculate length with reasonable limit
+    size_t env_len = strnlen(environ[i], 4096); // Max 4KB per env var
+    G_ENV_NEED_MEM += env_len + 1;
   }
 
   G_OS_ARGC = argc;

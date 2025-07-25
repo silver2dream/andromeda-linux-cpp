@@ -7,6 +7,7 @@ exclude_paths:
   - 'README*.md'
   - 'CONTRIBUTING.md'
   - 'TESTING_CHECKLIST.md'
+  - 'SECURITY_FIXES.md'
   - 'LICENSE'
   - 'CHANGELOG.md'
   
@@ -25,6 +26,7 @@ exclude_paths:
   # Configuration files
   - '.clang-format'
   - '.gitignore'
+  - '.gitattributes'
   - 'andromeda.conf'
   - 'Dockerfile'
   - '*.yml'
@@ -40,12 +42,20 @@ tools:
   eslint:
     enabled: false
   
-  # Only analyze C++ source files
+  # Enable C++ analysis tools
   cppcheck:
     enabled: true
-  
+    
   clang-tidy:
     enabled: true
+    
+  # Enable security analysis
+  bandit:
+    enabled: false  # Python only
+    
+  # Security patterns
+  security-code-scan:
+    enabled: false  # .NET only
 
 # Patterns to exclude from duplication analysis
 duplication:
@@ -55,6 +65,7 @@ duplication:
     - 'generated/**'
     - '**/*.yml'
     - '**/*.yaml'
+    - 'logs/**'
 
 # Coverage settings
 coverage:
@@ -63,3 +74,18 @@ coverage:
     - '**/*.md'
     - 'generated/**'
     - 'logs/**'
+    - 'cmake-build-debug/**'
+    - 'build/**'
+
+# Custom patterns for C++ security
+engines:
+  cppcheck:
+    enabled: true
+    exclude_paths:
+      - 'generated/**'
+    
+  clang-tidy:
+    enabled: true
+    exclude_paths:
+      - 'generated/**'
+      - 'net/ikcp.c'  # Third-party code
