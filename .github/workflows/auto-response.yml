@@ -1,0 +1,34 @@
+name: Auto Response
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  auto-response:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto comment on issues
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thank you for your interest in Andromeda! 🚀\n\nThis project is currently in **showcase mode**. While I may not be able to provide immediate responses, the community is encouraged to discuss and help each other.\n\n**Feel free to:**\n- 🍴 Fork the project for your own use\n- 💡 Share solutions in the comments\n- 🤝 Connect with other users\n- 📚 Learn from the codebase\n\n**Community members**: Please feel free to jump in and help answer questions or provide insights!\n\nAppreciate your understanding! ⭐'
+            })
+      
+      - name: Auto comment on pull requests
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thank you for your contribution to Andromeda! 🎉\n\nThis project is currently in **showcase mode** with limited maintenance capacity. While I appreciate your PR, please note:\n\n⚠️ **Limited Review Time**: PRs may not be reviewed promptly due to time constraints\n\n**Suggestions:**\n- 🍴 Consider maintaining your changes in your own fork\n- 📢 Share your improvements with the community\n- 🤝 Connect with other contributors who might be interested\n\n**Community**: Feel free to review, test, and discuss this PR!\n\nThank you for your understanding and contribution! 🙏'
+            })

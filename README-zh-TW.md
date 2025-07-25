@@ -1,14 +1,30 @@
-[English](README.md) | [繁體中文](README-zh-TW.md)
----
 # Andromeda Linux C++
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/silver2dream/andromeda-linux-cpp/ubuntu.yml?logo=github)
 [![GitHub License](https://img.shields.io/github/license/silver2dream/andromeda-linux-cpp?logo=github)][license]
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b0e6a6bf3b59467e9f18379dc87d9ee6)](https://app.codacy.com/gh/silver2dream/andromeda-linux-cpp/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+![Project Status](https://img.shields.io/badge/status-showcase-yellow)
+![Maintenance](https://img.shields.io/badge/maintenance-limited-orange)
 
 [license]: LICENSE
 
 一個使用 C++ 編寫的高性能網路伺服器框架，採用多進程和多線程架構設計，專為處理高並發 TCP 連接而開發。
+
+## 📢 專案狀態
+
+本專案目前處於**展示模式**。雖然程式碼功能完整並展示了高性能網路程式設計概念，但由於時間限制，主動維護和功能開發受到限制。
+
+### 這意味著什麼：
+- ✅ **歡迎程式碼審查**：歡迎探索和學習程式碼
+- ✅ **問題討論**：歡迎提出錯誤報告和問題進行社群討論
+- ⚠️ **PR 審查有限**：Pull Request 可能無法及時審查
+- ⚠️ **不接受功能請求**：目前不積極規劃新功能
+
+### 社群貢獻
+如果您覺得這個專案有用並想要貢獻：
+- Fork 儲存庫進行您自己的修改
+- 與社群分享您的改進
+- 如果您有興趣長期參與，請考慮成為維護者
 
 ## 🌟 特色功能
 

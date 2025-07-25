@@ -1,14 +1,30 @@
-[English](README.md) | [繁體中文](README-zh-TW.md)
----
 # Andromeda Linux C++
 
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/silver2dream/andromeda-linux-cpp/ubuntu.yml?logo=github)
 [![GitHub License](https://img.shields.io/github/license/silver2dream/andromeda-linux-cpp?logo=github)][license]
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b0e6a6bf3b59467e9f18379dc87d9ee6)](https://app.codacy.com/gh/silver2dream/andromeda-linux-cpp/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
+![Project Status](https://img.shields.io/badge/status-showcase-yellow)
+![Maintenance](https://img.shields.io/badge/maintenance-limited-orange)
 
 [license]: LICENSE
 
 A high-performance network server framework written in C++, designed for handling concurrent TCP connections with multi-process and multi-threading architecture.
+
+## 📢 Project Status
+
+This project is currently in **showcase mode**. While the codebase is functional and demonstrates high-performance networking concepts, active maintenance and feature development are limited due to time constraints.
+
+### What this means:
+- ✅ **Code Review Welcome**: Feel free to explore and learn from the code
+- ✅ **Issues for Discussion**: Bug reports and questions are welcome for community discussion
+- ⚠️ **Limited PR Reviews**: Pull requests may not be reviewed promptly
+- ⚠️ **No Feature Requests**: New features are not actively planned
+
+### Community Contributions
+If you find this project useful and want to contribute:
+- Fork the repository for your own modifications
+- Share your improvements with the community
+- Consider becoming a maintainer if you're interested in long-term involvement
 
 ## 🌟 Features
 
