@@ -12,17 +12,19 @@ Please describe your question as clearly as possible.
 
 **Context**
 What are you trying to accomplish? Please provide:
+
 - Your use case
 - What you've already tried
 - Any relevant code snippets or configuration
 
 **System Information (if relevant):**
+
 - OS: [e.g. Ubuntu 22.04]
 - Compiler: [e.g. GCC 11.2]
 - CMake version: [e.g. 3.20]
 
 **Documentation References**
-Have you checked:
+to Have you checked:
 - [ ] README.md
 - [ ] Code comments
 - [ ] Configuration examples

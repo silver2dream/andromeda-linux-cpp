@@ -21,12 +21,14 @@ Add any other context or screenshots about the feature request here.
 
 **Community Implementation**
 Since this project is in showcase mode:
+
 - Consider implementing this feature in your own fork
 - Share your implementation with the community
 - Connect with other users who might be interested in this feature
 
 **Implementation Complexity**
 Please indicate if you believe this feature is:
+
 - [ ] Simple (minor code changes)
 - [ ] Moderate (some architectural changes)
 - [ ] Complex (major architectural changes)

@@ -24,6 +24,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **System Information:**
+
 - OS: [e.g. Ubuntu 22.04]
 - Compiler: [e.g. GCC 11.2]
 - CMake version: [e.g. 3.20]
@@ -34,6 +35,7 @@ Add any other context about the problem here.
 
 **Community Discussion**
 Since this project is in showcase mode, community members are encouraged to:
+
 - Share potential solutions or workarounds
 - Discuss similar experiences
 - Help troubleshoot the issue
