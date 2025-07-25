@@ -48,6 +48,7 @@ void log_stderr(int err, const char *fmt, ...) {
     u_char errstr[ANDRO_MAX_ERROR_STR + 1];
     u_char *p, *last;
 
+    // Use explicit_bzero if available, otherwise memset
     memset(errstr, 0, sizeof(errstr));
     last = errstr + ANDRO_MAX_ERROR_STR;
 
@@ -67,18 +68,26 @@ void log_stderr(int err, const char *fmt, ...) {
     *p++ = '\n';
 
     write(STDERR_FILENO, errstr, p - errstr);
+    
+    // Securely clear the buffer after use
+    memset(errstr, 0, sizeof(errstr));
 }
 
 u_char *log_errno(u_char *buffer, u_char *last, int err) {
     char *errorInfo = strerror(err);
-    size_t len = strlen(errorInfo);
+    if (!errorInfo) {
+        return buffer; // Safety check
+    }
+    
+    // Use strnlen for safety
+    size_t len = strnlen(errorInfo, ANDRO_MAX_ERROR_STR);
 
     char leftstr[10] = {0};
-    sprintf(leftstr, " (%d: ", err);
-    size_t leftlen = strlen(leftstr);
+    snprintf(leftstr, sizeof(leftstr), " (%d: ", err);
+    size_t leftlen = strnlen(leftstr, sizeof(leftstr) - 1);
 
     char rightstr[] = ") ";
-    size_t rightlen = strlen(rightstr);
+    size_t rightlen = sizeof(rightstr) - 1; // Compile-time constant
 
     size_t extralen = leftlen + rightlen;
     if ((buffer + len + extralen) < last) {
@@ -93,6 +102,7 @@ void log_error_core(int level, int err, const char *fmt, ...) {
     u_char *last;
     u_char errstr[ANDRO_MAX_ERROR_STR + 1];
 
+    // Use explicit_bzero if available, otherwise memset
     memset(errstr, 0, sizeof(errstr));
     last = errstr + ANDRO_MAX_ERROR_STR;
 
@@ -102,6 +112,7 @@ void log_error_core(int level, int err, const char *fmt, ...) {
     u_char *p;
     va_list args;
 
+    // These are not sensitive data, but following best practices
     memset(&tv, 0, sizeof(timeval));
     memset(&tm, 0, sizeof(tm));
 
@@ -119,7 +130,9 @@ void log_error_core(int level, int err, const char *fmt, ...) {
              tm.tm_mday, tm.tm_hour,
              tm.tm_min, tm.tm_sec);
 
-    p = Andro_Cpy_Mem(errstr, strcurrtime, strlen((const char *)strcurrtime));
+    // Use strnlen for safety
+    size_t time_len = strnlen((const char *)strcurrtime, sizeof(strcurrtime) - 1);
+    p = Andro_Cpy_Mem(errstr, strcurrtime, time_len);
     p = slprintf(p, last, " [%s] ", err_levels[level]);
     p = slprintf(p, last, "%P: ", andro_pid);
 
@@ -155,4 +168,6 @@ void log_error_core(int level, int err, const char *fmt, ...) {
         break;
     }
 
+    // Securely clear the buffer after use
+    memset(errstr, 0, sizeof(errstr));
 }

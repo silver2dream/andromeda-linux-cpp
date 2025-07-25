@@ -1,5 +1,5 @@
 #include <cerrno>  //errno
-#include <ctime>   //localtime_r
+#include <ctime>   //localtime_r, nanosleep
 #include <unistd.h>//STDERR_FILENO
 
 #include "andro_func.h"
@@ -57,7 +57,7 @@ void CSocket::init_connection_pool() {
   int conn_pool_size = sizeof(connection_t);
   for (int i = 0; i < worker_max_connections; ++i) {
 	conn_ptr = (lp_connection_t) CMemory::AllocMemory(conn_pool_size, true);
-	conn_ptr = new(conn_ptr) connection_t();
+	conn_ptr = new(conn_ptr) connection_t();  
 	conn_ptr->GetOneToUse();
 	connection_pool.push_back(conn_ptr);
 	free_connection_pool.push_back(conn_ptr);
@@ -141,7 +141,11 @@ void *CSocket::ServerRecyConnectionThread(void *thread_data) {
   lp_connection_t conn_ptr;
 
   while (true) {
-	usleep(200 * 1000);// 200ms
+	// Use nanosleep instead of usleep for better portability
+	struct timespec ts;
+	ts.tv_sec = 0;
+	ts.tv_nsec = 200 * 1000 * 1000; // 200ms in nanoseconds
+	nanosleep(&ts, nullptr);
 
 	if (socket_ptr->total_recy_connection_size > 0) {
 	  curr_time = time(nullptr);

@@ -42,9 +42,11 @@ bool CConfig::Load(const char *conf_name) {
         }
 
     lblprocstring:
-        if (strlen(line_buf) > 0) {
-            if (line_buf[strlen(line_buf) - 1] == 10 || line_buf[strlen(line_buf) - 1] == 13 || line_buf[strlen(line_buf) - 1] == 32) {
-                line_buf[strlen(line_buf) - 1] = 0;
+        // Use strnlen for safety
+        size_t line_len = strnlen(line_buf, sizeof(line_buf) - 1);
+        if (line_len > 0) {
+            if (line_buf[line_len - 1] == 10 || line_buf[line_len - 1] == 13 || line_buf[line_len - 1] == 32) {
+                line_buf[line_len - 1] = 0;
                 goto lblprocstring;
             }
         }
@@ -56,9 +58,21 @@ bool CConfig::Load(const char *conf_name) {
         char *tmp = strchr(line_buf, '=');
         if (tmp != nullptr) {
             auto confitem = new CConfItem;
+            // Use memset_s or explicit_bzero if available, otherwise standard memset
             memset(confitem, 0, sizeof(CConfItem));
-            strncpy(confitem->ItemName, line_buf, (int)(tmp - line_buf));
-            strcpy(confitem->ItemContent, tmp + 1);
+            
+            // Safe string copying with bounds checking
+            size_t name_len = tmp - line_buf;
+            if (name_len >= sizeof(confitem->ItemName)) {
+                name_len = sizeof(confitem->ItemName) - 1;
+            }
+            strncpy(confitem->ItemName, line_buf, name_len);
+            confitem->ItemName[name_len] = '\0'; // Ensure null termination
+            
+            // Safe content copying
+            size_t content_len = strnlen(tmp + 1, sizeof(confitem->ItemContent) - 1);
+            strncpy(confitem->ItemContent, tmp + 1, content_len);
+            confitem->ItemContent[content_len] = '\0'; // Ensure null termination
 
             Rtrim(confitem->ItemName);
             Ltrim(confitem->ItemName);

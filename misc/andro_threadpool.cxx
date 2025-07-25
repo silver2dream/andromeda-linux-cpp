@@ -1,7 +1,7 @@
-
 #include "andro_threadpool.h"
 
-#include <unistd.h>  //usleep
+#include <ctime>      // for nanosleep
+#include <cerrno>     // for errno
 
 #include "andro_func.h"
 #include "andro_global.h"
@@ -53,7 +53,11 @@ bool CThreadPool::Create(int in_thread_num) {
 lblfor:
     for (iter = thread_vector.begin(); iter != thread_vector.end(); iter++) {
         if (!(*iter)->is_running) {
-            usleep(100 * 1000);  // Sleep 100ms
+            // Use nanosleep instead of usleep for better portability and safety
+            struct timespec ts;
+            ts.tv_sec = 0;
+            ts.tv_nsec = 100 * 1000 * 1000; // 100ms in nanoseconds
+            nanosleep(&ts, nullptr);
             goto lblfor;
         }
     }

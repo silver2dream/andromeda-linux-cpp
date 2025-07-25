@@ -30,8 +30,10 @@ int daemon() {
         return -1;
     }
 
-    // The `umask(0)` function call sets the file mode creation mask to 0, allowing newly created files to have the maximum permissions.
-    umask(0);
+    // Set umask to more restrictive value for security
+    // 022 means: owner has full permissions, group and others have read-only
+    // This prevents creation of world-writable files
+    umask(022);
 
     int fd = open("/dev/null", O_RDWR);
     if (fd == -1) {

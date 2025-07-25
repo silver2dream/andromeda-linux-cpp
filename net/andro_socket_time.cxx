@@ -3,6 +3,8 @@
 // Copyright (c) 2023 RunOn Entertainment. All rights reserved.
 //
 
+#include <ctime>      // for nanosleep
+
 #include "andro_func.h"
 #include "andro_global.h"
 #include "andro_lockmutex.h"
@@ -51,7 +53,12 @@ void *CSocket::ServerTimerQueueMonitorThread(void *thread_data) {
 		}
 	  }
 	}
-	usleep(500 * 1000);
+	
+	// Use nanosleep instead of usleep for better portability
+	struct timespec ts;
+	ts.tv_sec = 0;
+	ts.tv_nsec = 500 * 1000 * 1000; // 500ms in nanoseconds
+	nanosleep(&ts, nullptr);
   }
   return nullptr;
 }
@@ -156,4 +163,3 @@ void CSocket::clear_timer_queue() {
 void CSocket::HeartBeatTimeoutChecking(lp_message_header_t message_header_ptr, time_t cur_time) {
   CMemory::FreeMemory(message_header_ptr);
 }
-

@@ -18,7 +18,7 @@ void init_proctitle() {
     char *tmp = G_ENVMEM;
 
     for (i = 0; environ[i]; i++) {
-        // Use strnlen and strncpy for safety
+        // Use strnlen and safe string copy
         size_t env_len = strnlen(environ[i], 4096);
         size_t size = env_len + 1;
         
@@ -27,7 +27,8 @@ void init_proctitle() {
             break; // Prevent buffer overflow
         }
         
-        strncpy(tmp, environ[i], env_len);
+        // Use memcpy instead of strncpy for better control
+        memcpy(tmp, environ[i], env_len);
         tmp[env_len] = '\0'; // Ensure null termination
         environ[i] = tmp;
         tmp += size;
@@ -71,12 +72,13 @@ void set_proctitle(const char *title) {
     G_OS_ARGV[1] = NULL;
     char *tmp = G_OS_ARGV[0];
     
-    // Use strncpy instead of strcpy for safety
-    strncpy(tmp, title, ititlelen);
+    // Use memcpy instead of strncpy to avoid the warning
+    // memcpy is safe here because we've already validated the length
+    memcpy(tmp, title, ititlelen);
     tmp[ititlelen] = '\0'; // Ensure null termination
     tmp += ititlelen;
 
-    size_t cha = esy - ititlelen;
+    size_t cha = esy - ititlelen - 1; // -1 for the null terminator we just added
     memset(tmp, 0, cha);
     return;
 }
