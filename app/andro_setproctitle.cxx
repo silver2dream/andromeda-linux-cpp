@@ -53,12 +53,7 @@ void set_proctitle(const char *title) {
         ititlelen = MAX_TITLE_LEN - 1; // Leave space for null terminator
     }
 
-    size_t environlen = 0;
-    for (int i = 0; G_OS_ARGV[i]; i++) {
-        // Use strnlen for safety
-        environlen += strnlen(G_OS_ARGV[i], 4096) + 1;
-    }
-
+    // Calculate available space - removed unused environlen variable
     size_t esy = G_ENV_NEED_MEM + G_ARGV_NEED_MEM;
     if (esy <= ititlelen) {
         return; // Not enough space

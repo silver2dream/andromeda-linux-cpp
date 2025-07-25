@@ -149,19 +149,19 @@ void log_error_core(int level, int err, const char *fmt, ...) {
     }
     *p++ = '\n';
 
-    ssize_t n;
     while (true) {
         if (level > andro_log.log_level) {
             break;
         }
 
-        n = write(andro_log.fd, errstr, p - errstr);
+        ssize_t n = write(andro_log.fd, errstr, p - errstr);
         if (n == -1) {
             if (errno == ENOSPC) {
                 // maybe no space.
             } else {
                 if (andro_log.fd != STDERR_FILENO) {
-                    n = write(STDERR_FILENO, errstr, p - errstr);
+                    // Write to stderr as fallback, but don't need to store return value
+                    (void)write(STDERR_FILENO, errstr, p - errstr);
                 }
             }
         }
