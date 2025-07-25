@@ -21,6 +21,10 @@ exclude_paths:
   - 'logs/**'
   - 'actions-runner/**'
   
+  # Third-party libraries (KCP protocol implementation)
+  - '_include/ikcp.h'      # Third-party KCP library header
+  - 'net/ikcp.c'           # Third-party KCP library implementation
+  
   # Configuration files (but keep source code analysis)
   - '.clang-format'
   - '.gitignore'
@@ -37,6 +41,8 @@ engines:
       - 'generated/**'
       - 'cmake-build-debug/**'
       - 'build/**'
+      - '_include/ikcp.h'
+      - 'net/ikcp.c'
     
   clang-tidy:
     enabled: true
@@ -44,7 +50,8 @@ engines:
       - 'generated/**'
       - 'cmake-build-debug/**' 
       - 'build/**'
-      - 'net/ikcp.c'  # Third-party KCP implementation
+      - '_include/ikcp.h'    # Third-party KCP implementation
+      - 'net/ikcp.c'         # Third-party KCP implementation
   
   # Disable non-C++ tools
   eslint:
@@ -67,6 +74,8 @@ duplication:
     - 'generated/**'
     - 'cmake-build-debug/**'
     - 'build/**'
+    - '_include/ikcp.h'
+    - 'net/ikcp.c'
 
 # Coverage settings  
 coverage:
@@ -77,3 +86,5 @@ coverage:
     - 'logs/**'
     - 'cmake-build-debug/**'
     - 'build/**'
+    - '_include/ikcp.h'
+    - 'net/ikcp.c'
