@@ -1,0 +1,65 @@
+---
+# Codacy configuration file
+# Exclude files and directories that shouldn't be analyzed for code quality
+
+exclude_paths:
+  # Documentation files
+  - 'README*.md'
+  - 'CONTRIBUTING.md'
+  - 'TESTING_CHECKLIST.md'
+  - 'LICENSE'
+  - 'CHANGELOG.md'
+  
+  # GitHub specific files
+  - '.github/**'
+  - '.github/ISSUE_TEMPLATE/**'
+  - '.github/workflows/**'
+  
+  # Build and generated files
+  - 'cmake-build-debug/**'
+  - 'build/**'
+  - 'generated/**'
+  - 'logs/**'
+  - 'actions-runner/**'
+  
+  # Configuration files
+  - '.clang-format'
+  - '.gitignore'
+  - 'andromeda.conf'
+  - 'Dockerfile'
+  - '*.yml'
+  - '*.yaml'
+
+# Configure tools
+tools:
+  # Disable certain tools for markdown files
+  remark-lint:
+    enabled: false
+  
+  # Configure ESLint for YAML files
+  eslint:
+    enabled: false
+  
+  # Only analyze C++ source files
+  cppcheck:
+    enabled: true
+  
+  clang-tidy:
+    enabled: true
+
+# Patterns to exclude from duplication analysis
+duplication:
+  exclude_paths:
+    - '.github/**'
+    - '**/*.md'
+    - 'generated/**'
+    - '**/*.yml'
+    - '**/*.yaml'
+
+# Coverage settings
+coverage:
+  exclude_paths:
+    - '.github/**'
+    - '**/*.md'
+    - 'generated/**'
+    - 'logs/**'

@@ -1,0 +1,65 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Force batch scripts to always use CRLF line endings
+*.bat text eol=crlf
+
+# Force bash scripts to always use LF line endings
+*.sh text eol=lf
+
+# C++ source files
+*.c text
+*.cc text
+*.cxx text
+*.cpp text
+*.c++ text
+*.hpp text
+*.h text
+*.h++ text
+*.hh text
+
+# Documentation
+*.md text
+*.txt text
+*.adoc text
+*.tex text
+
+# Graphics
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+
+# Archives
+*.7z binary
+*.gz binary
+*.tar binary
+*.tgz binary
+*.zip binary
+
+# Configuration files
+*.yml text
+*.yaml text
+*.json text
+*.toml text
+*.ini text
+*.cfg text
+*.conf text
+
+# Build files
+Makefile text
+*.mk text
+*.cmake text
+CMakeLists.txt text
+
+# Ignore generated files from version control
+generated/ export-ignore
+cmake-build-debug/ export-ignore
+build/ export-ignore
+logs/ export-ignore
+actions-runner/ export-ignore
+
+# GitHub files
+.github/ export-ignore
