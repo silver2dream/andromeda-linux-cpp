@@ -1,20 +1,18 @@
 ---
 # Codacy configuration file
-# Exclude files and directories that shouldn't be analyzed for code quality
 
+# Exclude files and directories that shouldn't be analyzed
 exclude_paths:
   # Documentation files
   - 'README*.md'
   - 'CONTRIBUTING.md'
   - 'TESTING_CHECKLIST.md'
   - 'SECURITY_FIXES.md'
+  - 'CODACY_DEBUG.md'
   - 'LICENSE'
-  - 'CHANGELOG.md'
   
   # GitHub specific files
   - '.github/**'
-  - '.github/ISSUE_TEMPLATE/**'
-  - '.github/workflows/**'
   
   # Build and generated files
   - 'cmake-build-debug/**'
@@ -23,51 +21,54 @@ exclude_paths:
   - 'logs/**'
   - 'actions-runner/**'
   
-  # Configuration files
+  # Configuration files (but keep source code analysis)
   - '.clang-format'
   - '.gitignore'
   - '.gitattributes'
   - 'andromeda.conf'
   - 'Dockerfile'
-  - '*.yml'
-  - '*.yaml'
 
-# Configure tools
-tools:
-  # Disable certain tools for markdown files
-  remark-lint:
-    enabled: false
-  
-  # Configure ESLint for YAML files
-  eslint:
-    enabled: false
-  
-  # Enable C++ analysis tools
+# Configure analysis engines
+engines:
+  # C++ analysis
   cppcheck:
     enabled: true
+    exclude_paths:
+      - 'generated/**'
+      - 'cmake-build-debug/**'
+      - 'build/**'
     
   clang-tidy:
     enabled: true
+    exclude_paths:
+      - 'generated/**'
+      - 'cmake-build-debug/**' 
+      - 'build/**'
+      - 'net/ikcp.c'  # Third-party KCP implementation
+  
+  # Disable non-C++ tools
+  eslint:
+    enabled: false
     
-  # Enable security analysis
+  remark-lint:
+    enabled: false
+    
   bandit:
-    enabled: false  # Python only
+    enabled: false
     
-  # Security patterns
-  security-code-scan:
-    enabled: false  # .NET only
+  pylint:
+    enabled: false
 
-# Patterns to exclude from duplication analysis
+# Duplication detection settings
 duplication:
   exclude_paths:
     - '.github/**'
     - '**/*.md'
     - 'generated/**'
-    - '**/*.yml'
-    - '**/*.yaml'
-    - 'logs/**'
+    - 'cmake-build-debug/**'
+    - 'build/**'
 
-# Coverage settings
+# Coverage settings  
 coverage:
   exclude_paths:
     - '.github/**'
@@ -76,16 +77,3 @@ coverage:
     - 'logs/**'
     - 'cmake-build-debug/**'
     - 'build/**'
-
-# Custom patterns for C++ security
-engines:
-  cppcheck:
-    enabled: true
-    exclude_paths:
-      - 'generated/**'
-    
-  clang-tidy:
-    enabled: true
-    exclude_paths:
-      - 'generated/**'
-      - 'net/ikcp.c'  # Third-party code
