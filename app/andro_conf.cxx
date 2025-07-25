@@ -61,17 +61,21 @@ bool CConfig::Load(const char *conf_name) {
             // Use memset_s or explicit_bzero if available, otherwise standard memset
             memset(confitem, 0, sizeof(CConfItem));
             
-            // Safe string copying with bounds checking
+            // Safe string copying with bounds checking using memcpy instead of strncpy
             size_t name_len = tmp - line_buf;
             if (name_len >= sizeof(confitem->ItemName)) {
                 name_len = sizeof(confitem->ItemName) - 1;
             }
-            strncpy(confitem->ItemName, line_buf, name_len);
+            // Use memcpy instead of strncpy to avoid CWE-120
+            memcpy(confitem->ItemName, line_buf, name_len);
             confitem->ItemName[name_len] = '\0'; // Ensure null termination
             
-            // Safe content copying
+            // Safe content copying using memcpy
             size_t content_len = strnlen(tmp + 1, sizeof(confitem->ItemContent) - 1);
-            strncpy(confitem->ItemContent, tmp + 1, content_len);
+            if (content_len >= sizeof(confitem->ItemContent)) {
+                content_len = sizeof(confitem->ItemContent) - 1;
+            }
+            memcpy(confitem->ItemContent, tmp + 1, content_len);
             confitem->ItemContent[content_len] = '\0'; // Ensure null termination
 
             Rtrim(confitem->ItemName);

@@ -30,10 +30,10 @@ int daemon() {
         return -1;
     }
 
-    // Set umask to more restrictive value for security
-    // 022 means: owner has full permissions, group and others have read-only
-    // This prevents creation of world-writable files
-    umask(022);
+    // Set umask to most restrictive value for security (077)
+    // 077 means: owner has full permissions, group and others have no permissions
+    // This is more secure than 022 as it prevents group/other access entirely
+    umask(077);
 
     int fd = open("/dev/null", O_RDWR);
     if (fd == -1) {

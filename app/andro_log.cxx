@@ -29,15 +29,15 @@ void log_init() {
     u_char *log_name = nullptr;
 
     auto config = CConfig::GetInstance();
-    log_name = (u_char *)config->GetString("Log");
-    if (log_name == nullptr) {
-        log_name = (u_char *)ANDRO_ERROR_LOG_PATH;
+    const char* log_name_str = config->GetString("Log");
+    if (log_name_str == nullptr) {
+        log_name_str = ANDRO_ERROR_LOG_PATH;
     }
 
     andro_log.log_level = config->GetIntDefault("LogLevel", ANDRO_LOG_NOTICE);
-    andro_log.fd = open((const char *)log_name, O_WRONLY | O_APPEND | O_CREAT, 0644);
+    andro_log.fd = open(log_name_str, O_WRONLY | O_APPEND | O_CREAT, 0644);
     if (andro_log.fd == -1) {
-        log_stderr(errno, "[alert] could not open error log file: open() \"%s\" failed", log_name);
+        log_stderr(errno, "[alert] could not open error log file: open() \"%s\" failed", log_name_str);
         andro_log.fd = STDERR_FILENO;
     }
 
@@ -130,8 +130,8 @@ void log_error_core(int level, int err, const char *fmt, ...) {
              tm.tm_mday, tm.tm_hour,
              tm.tm_min, tm.tm_sec);
 
-    // Use strnlen for safety
-    size_t time_len = strnlen((const char *)strcurrtime, sizeof(strcurrtime) - 1);
+    // Use strnlen without C-style cast - strcurrtime is already u_char*
+    size_t time_len = strnlen(reinterpret_cast<const char*>(strcurrtime), sizeof(strcurrtime) - 1);
     p = Andro_Cpy_Mem(errstr, strcurrtime, time_len);
     p = slprintf(p, last, " [%s] ", err_levels[level]);
     p = slprintf(p, last, "%P: ", andro_pid);
